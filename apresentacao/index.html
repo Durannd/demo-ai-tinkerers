@@ -158,8 +158,8 @@ figcaption code{font-size:12px;color:var(--cyan)}
   <div class="brand">Pipeline de vídeo<br>por código</div>
   <ol id="toc">
     <li><a href="#visao">Visão geral</a></li>
-    <li><a href="#storyboard">Storyboard</a></li>
     <li><a href="#roteiro-ia">Pesquisa e roteiro</a></li>
+    <li><a href="#storyboard">Storyboard</a></li>
     <li><a href="#voz">Voz</a></li>
     <li><a href="#midia">Mídia e IA</a></li>
     <li><a href="#remotion">Remotion</a></li>
@@ -190,8 +190,37 @@ figcaption code{font-size:12px;color:var(--cyan)}
 </section>
 
 <!-- ============ 1 ============ -->
+<section id="roteiro-ia">
+  <p class="eyebrow">01 · Ponto de partida</p>
+  <h2>Pesquisa e roteiro feitos pela IA</h2>
+  <p>É uma <i>skill</i> (instruções reutilizáveis): a IA age como pesquisadora e roteirista do canal. Antes de qualquer coisa, ela lê a "bíblia" do canal (tom, regras de escrita, exemplos) e o schema. O fluxo tem <b>uma parada para aprovação humana em cada etapa</b>.</p>
+
+  <div class="grid g3">
+    <div class="card"><span class="n">1</span><h4>Pautas</h4><p>5 propostas, checadas com busca na web para ver se há material confiável.</p><span class="pause">aprovação</span><p></p></div>
+    <div class="card"><span class="n">2</span><h4>Dossiê</h4><p>Pesquisa de verdade, com fonte primária quando possível. <b>Todo fato tem link</b>; "confirmado por 2+ fontes" fica separado de "disputado". Lista também a mídia livre que existe.</p><span class="pause">aprovação</span><p></p></div>
+    <div class="card"><span class="n">3</span><h4>Estrutura</h4><p>Blocos, capítulos como pergunta, loops abertos e duração estimada.</p><span class="pause">aprovação</span><p></p></div>
+    <div class="card"><span class="n">4</span><h4>Roteiro</h4><p>Narração completa no ritmo do canal (palavras por minuto). O que não está confirmado leva <code class="i">[VERIFICAR]</code>.</p><span class="pause">aprovação</span><p></p></div>
+    <div class="card"><span class="n">5</span><h4>Storyboard</h4><p>O roteiro aprovado é convertido <b>palavra por palavra</b> em JSON e importado: se não valida, volta para correção.</p><p></p></div>
+  </div>
+
+  <h3>O que o dossiê vira no storyboard</h3>
+  <p>A pesquisa não some: ela vira o bloco <code class="i">fontes</code> do storyboard (o JSON do próximo passo). Cada afirmação fica ligada à fonte e às cenas que dependem dela, e alimenta a descrição do vídeo.</p>
+  <div class="codewrap">
+    <header><span>bloco fontes</span><span>storyboard.json</span></header>
+<pre class="code" data-lang="json" data-src="s-fontes"></pre>
+  </div>
+
+  <h3>Regras que não podem falhar</h3>
+  <ul class="t">
+    <li>Nunca inventar fato, data, número, citação ou coordenada. Sem fonte, marca <code class="i">[VERIFICAR]</code>, e o storyboard não importa com essa marca.</li>
+    <li>Nada de rosto de pessoa real gerado por IA; nada de jornal, carta ou documento falso.</li>
+    <li>A IA propõe e pesquisa; <b>o roteiro e os fatos são aprovados por uma pessoa</b> antes de virar áudio.</li>
+  </ul>
+</section>
+
+<!-- ============ 2 ============ -->
 <section id="storyboard">
-  <p class="eyebrow">01 · O contrato</p>
+  <p class="eyebrow">02 · O contrato</p>
   <h2>Storyboard: o JSON que guia tudo</h2>
   <p>Três blocos: <code class="i">meta</code>, <code class="i">cenas</code> e <code class="i">fontes</code>. Na maioria das vezes eu nem escrevo esse JSON: a IA gera a partir do roteiro aprovado e eu reviso. Por isso o formato precisa ser claro e validável. Ele é o contrato entre quem escreve (IA ou pessoa) e quem produz.</p>
 
@@ -227,35 +256,6 @@ figcaption code{font-size:12px;color:var(--cyan)}
     <header><span>trecho</span><span>pipeline/validar.py</span></header>
 <pre class="code" data-lang="py" data-src="s-validar"></pre>
   </div>
-</section>
-
-<!-- ============ 2 ============ -->
-<section id="roteiro-ia">
-  <p class="eyebrow">02 · Antes do JSON</p>
-  <h2>Pesquisa e roteiro feitos pela IA</h2>
-  <p>É uma <i>skill</i> (instruções reutilizáveis): a IA age como pesquisadora e roteirista do canal. Antes de qualquer coisa, ela lê a "bíblia" do canal (tom, regras de escrita, exemplos) e o schema. O fluxo tem <b>uma parada para aprovação humana em cada etapa</b>.</p>
-
-  <div class="grid g3">
-    <div class="card"><span class="n">1</span><h4>Pautas</h4><p>5 propostas, checadas com busca na web para ver se há material confiável.</p><span class="pause">aprovação</span><p></p></div>
-    <div class="card"><span class="n">2</span><h4>Dossiê</h4><p>Pesquisa de verdade, com fonte primária quando possível. <b>Todo fato tem link</b>; "confirmado por 2+ fontes" fica separado de "disputado". Lista também a mídia livre que existe.</p><span class="pause">aprovação</span><p></p></div>
-    <div class="card"><span class="n">3</span><h4>Estrutura</h4><p>Blocos, capítulos como pergunta, loops abertos e duração estimada.</p><span class="pause">aprovação</span><p></p></div>
-    <div class="card"><span class="n">4</span><h4>Roteiro</h4><p>Narração completa no ritmo do canal (palavras por minuto). O que não está confirmado leva <code class="i">[VERIFICAR]</code>.</p><span class="pause">aprovação</span><p></p></div>
-    <div class="card"><span class="n">5</span><h4>Storyboard</h4><p>O roteiro aprovado é convertido <b>palavra por palavra</b> em JSON e importado: se não valida, volta para correção.</p><p></p></div>
-  </div>
-
-  <h3>O que o dossiê vira dentro do JSON</h3>
-  <p>A pesquisa não some: cada afirmação fica ligada à fonte e às cenas que dependem dela, e alimenta a descrição do vídeo.</p>
-  <div class="codewrap">
-    <header><span>bloco fontes</span><span>storyboard.json</span></header>
-<pre class="code" data-lang="json" data-src="s-fontes"></pre>
-  </div>
-
-  <h3>Regras que não podem falhar</h3>
-  <ul class="t">
-    <li>Nunca inventar fato, data, número, citação ou coordenada. Sem fonte, marca <code class="i">[VERIFICAR]</code>, e o storyboard não importa com essa marca.</li>
-    <li>Nada de rosto de pessoa real gerado por IA; nada de jornal, carta ou documento falso.</li>
-    <li>A IA propõe e pesquisa; <b>o roteiro e os fatos são aprovados por uma pessoa</b> antes de virar áudio.</li>
-  </ul>
 </section>
 
 <!-- ============ 3 ============ -->
