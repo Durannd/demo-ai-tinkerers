@@ -505,28 +505,6 @@ figcaption code{font-size:12px;color:var(--cyan)}
   <p class="muted" style="font-size:14px">Cada cena é um componente React renderizado pelo Remotion. A folha de contato abaixo mostra as 12 amostras do vídeo.</p>
   <img src="assets/demo/folha.jpg" alt="Folha de contato do vídeo de demonstração" style="display:block;width:100%;max-width:760px;border-radius:12px;border:1px solid var(--line)">
 
-  <h3>Quanto tempo leva</h3>
-  <table class="tbl">
-    <tr><th>Etapa</th><th>Tempo medido</th></tr>
-    <tr><td>Validar o storyboard</td><td class="t">0,4 s</td></tr>
-    <tr><td>Narrar 7 cenas (43 s de áudio), Gemini ao vivo</td><td class="t">~57 s</td></tr>
-    <tr><td>Montar o rascunho a frio (7 cenas)</td><td class="t">~130 s</td></tr>
-    <tr class="hi"><td><b>Rodar de novo sem mudar nada</b></td><td class="t">8 s</td></tr>
-    <tr class="hi"><td><b>Mudar um número numa cena: só ela é refeita</b></td><td class="t">36 s</td></tr>
-    <tr><td>Mudar a fala de uma cena (voz + montagem)</td><td class="t">13 s + 37 s</td></tr>
-  </table>
-  <p class="muted" style="font-size:14px">Medido num desktop de desenvolvimento (CPU de 6 núcleos), com o render só na CPU. Numa máquina sem placa de vídeo e mais fraca, esses tempos ficam maiores.</p>
-
-  <h3>A parte que mais explica a arquitetura: o cache</h3>
-  <p>Depois do primeiro vídeo, o roteiro da demo é simples: trocar o número de uma cena e montar de novo. O log mostra <code class="i">Remotion: 1 cena(s) para renderizar</code>: o hash das props da cena mudou, e só ela é refeita. As outras 6 vêm do cache. É o mesmo mecanismo que vale para voz, blocos de vídeo e objetos.</p>
-
-  <h3>Plano B</h3>
-  <ul class="t">
-    <li>Sem internet ou sem cota do TTS: o episódio de reserva tem a narração em cache e monta offline.</li>
-    <li>Claude Code lento: um storyboard salvo roda os mesmos passos à mão.</li>
-    <li>Tudo falhou: o vídeo de reserva já renderizado, acima.</li>
-  </ul>
-
   <h3>O que já entrou depois da primeira versão</h3>
   <div class="clips h" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
     <figure style="--ar:16/9"><video muted loop playsinline preload="metadata" src="assets/demo/cena3d.mp4" poster="assets/demo/cena3d.jpg"></video><figcaption><b>Cenas 3D</b>Um catálogo de 17 modelos procedurais (engrenagem, motor, mapa, globo, sol, cidade, termômetro…), com ações presas à palavra falada. Servem como cena inteira ou como objeto transparente sobre uma foto. Aqui, o sistema solar do formato "E se…".</figcaption></figure>
