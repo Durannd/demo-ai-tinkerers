@@ -1,0 +1,260 @@
+{
+  "canal": {
+    "_doc": "Canal padrão da demo. Override em canais/<id>/canal.json.",
+    "id": "demo",
+    "nome": "Canal Demo",
+    "handle": "",
+    "idioma": "pt-BR",
+    "palavras_por_minuto": 140,
+    "hashtags": [
+      "demonstração"
+    ]
+  },
+  "video": {
+    "largura": 1280,
+    "altura": 720,
+    "fps": 30,
+    "crf": 23,
+    "preset": "veryfast",
+    "cq_gpu": 21,
+    "_doc": "720p para a demo (CPU fraca). O rascunho já usa preset rápido."
+  },
+  "voz": {
+    "provedor": "gemini",
+    "_provedores": "openrouter | elevenlabs_direto | mock | chatterbox (LOCAL pt-BR, GPU) | kokoro (LOCAL inglês, CPU). Troca pontual: narrar.py --provedor",
+    "modelo": "elevenlabs/eleven-v4",
+    "_modelos": "fixe uma versão datada (ex. elevenlabs/eleven-v4-20260930) para a voz não mudar entre episódios",
+    "voice": "nPczCjzI2devNBz1zQrb",
+    "_voice": "Brian (premade), escolhido em out/2026 nas amostras de episodios/_amostras_voz",
+    "idioma": "pt",
+    "alinhador": "whisper",
+    "_alinhadores": "scribe (OpenRouter, ~US$0,11/h) | whisper (faster-whisper offline, CPU) | local (stable-ts, grátis, melhor com GPU) | nenhum",
+    "alinhador_local": "whisper",
+    "_alinhador_local": "alinhador usado quando voz.provedor é chatterbox/kokoro (eles não devolvem tempos); whisper também mede o casamento (denuncia alucinação)",
+    "whisper_modelo": "small",
+    "_whisper_modelo": "faster-whisper: small (~0,25× o tempo do áudio na CPU) | medium (~0,7×, erra menos números/nomes)",
+    "chatterbox": {
+      "_doc": "Chatterbox Multilingual V3 pt-BR (ResembleAI/Chatterbox-Multilingual-pt-br, MIT) no venv do WanGP. referencia = WAV/MP3 de ~10 s de UMA voz com direito de uso (null = voz embutida do modelo). Frase a frase; frase com duração fora de 0,55–1,7× a esperada é regerada (max_tentativas); cena com casamento < casamento_minimo é regerada regeracoes_cena vez(es)",
+      "referencia": null,
+      "exaggeration": 0.4,
+      "cfg_weight": 0.5,
+      "temperature": 0.8,
+      "seed": 7,
+      "pausa": 0.25,
+      "chars_por_segundo": 14.0,
+      "max_tentativas": 3,
+      "casamento_minimo": 0.8,
+      "regeracoes_cena": 1,
+      "dispositivo": "cuda",
+      "velocidade": 0.85,
+      "_velocidade": "atempo no MP3 (ritmo sem mudar o tom). O modelo fala ~210 palavras/min; 0,85 deixa perto de ~170 com as pausas"
+    },
+    "kokoro": {
+      "_doc": "Kokoro-82M ONNX (Apache 2.0) no .venv do repo. onnx: cpu (fp16 ~2× mais rápido que o tempo real; directml FALHA no ConvTranspose do Kokoro, out/2026). Vozes americanas masculinas: am_michael (narrador, padrão), am_fenrir, am_puck",
+      "voz": "am_michael",
+      "velocidade": 1.0,
+      "idioma": "en-us",
+      "onnx": "cpu"
+    },
+    "stitching": true,
+    "seed": null,
+    "voice_settings": {
+      "stability": 0.5,
+      "similarity_boost": 0.8,
+      "style": 0.3
+    },
+    "_elevenlabs_direto": "para usar a API direta: provedor=elevenlabs_direto, voice_id, model_id=eleven_multilingual_v2, output_format",
+    "voice_id": "COLE_AQUI_O_VOICE_ID",
+    "model_id": "eleven_multilingual_v2",
+    "output_format": "mp3_44100_128",
+    "gemini": {
+      "voz": "Algenib"
+    },
+    "stutter_pausa_min": 0.7
+  },
+  "pausa_padrao": 0.35,
+  "ia": {
+    "_doc": "provedor de ia_imagem/ia_video: gemini | fal | local (GPU desta máquina, config ia_local). Modelos Gemini mudam: liste com GET v1beta/models antes de trocar",
+    "provedor": "gemini"
+  },
+  "ia_local": {
+    "_doc": "Modelos locais na RX 7600 (torch ROCm/TheRock). Instalação FORA do repo em 'pasta' (relativa à raiz; a variável IA_LOCAL tem prioridade): WanGP + venv wangp-env (imagem, vídeo, Chatterbox) e kokoro/ (ONNX). Reinstalação: HANDOFF.md, Atualização 17/10/2026. Uso avulso: python pipeline/ia_local.py status|imagem|video",
+    "pasta": "../ia-local",
+    "python": "wangp-env/Scripts/python.exe",
+    "wangp": "WanGP",
+    "argumentos_wangp": [
+      "--attention",
+      "sdpa",
+      "--profile",
+      "4"
+    ],
+    "env": {
+      "MIOPEN_FIND_MODE": "FAST"
+    },
+    "modelo_imagem": "flux2_klein_4b",
+    "_modelo_imagem": "Flux 2 Klein 4B (Apache 2.0, int8, 4 passos). Alternativa: z_image (Z-Image Turbo 6B, Apache). NÃO usar flux2_klein_9b (licença não comercial)",
+    "parametros_imagem": {
+      "num_inference_steps": 4
+    },
+    "formato_imagem": "1920x1088",
+    "_formato_imagem": "cenas ia_imagem: 16:9 (1280x720) | 9:16 | 1:1 | LxA (múltiplos de 16)",
+    "modelo_video": "ti2v_2_2_fastwan",
+    "_modelo_video": "Wan 2.2 TI2V 5B (Apache, int8) + LoRA FastWan (3 passos), 480p, 24 q/s, 121 quadros = 5 s",
+    "parametros_video": {
+      "resolution": "832x480",
+      "video_length": 121,
+      "num_inference_steps": 3
+    },
+    "video_a_partir_de_imagem": true,
+    "_video_a_partir_de_imagem": "true = gera antes um quadro com o modelo de imagem e anima (image-to-video): composição e estilo mais controlados",
+    "segundos_estimados": {
+      "carga": 60,
+      "imagem": 50,
+      "video": 450
+    }
+  },
+  "gemini": {
+    "modelo_imagem": "gemini-3.1-flash-image",
+    "parametros_imagem": {
+      "aspectRatio": "16:9",
+      "imageSize": "2K"
+    },
+    "modelo_video": "veo-3.1-lite-generate-preview",
+    "parametros_video": {
+      "aspectRatio": "16:9",
+      "durationSeconds": 8
+    }
+  },
+  "fal": {
+    "modelo_imagem": "fal-ai/flux/dev",
+    "parametros_imagem": {
+      "image_size": "landscape_16_9",
+      "num_images": 1
+    },
+    "modelo_video": "fal-ai/kling-video/v2.1/standard/text-to-video",
+    "parametros_video": {
+      "duration": "5",
+      "aspect_ratio": "16:9"
+    }
+  },
+  "limites": {
+    "max_ia_video": 4,
+    "max_percentual_mesmo_tipo": 0.5,
+    "max_percentual_cartela": 0.15,
+    "max_iguais_seguidos": 2,
+    "segundos_min_cena": 2.5,
+    "segundos_max_cena": 16,
+    "min_tipos_distintos": 4,
+    "max_percentual_animadas": 0.4,
+    "janela_assinatura": 3,
+    "gancho_segundos": 30,
+    "gancho_min_mudancas": 3,
+    "gancho_max_plano": 10,
+    "max_sem_evento": 20,
+    "_demo": "limites de ritmo relaxados: o vídeo da demo tem só 30–45 s"
+  },
+  "licencas_aceitas_wikimedia": [
+    "public domain",
+    "pd",
+    "cc0",
+    "cc by",
+    "cc-by",
+    "cc by-sa",
+    "cc-by-sa",
+    "no restrictions"
+  ],
+  "estilo": {
+    "fonte_ttf": "",
+    "cartela_fundo": "#101010",
+    "cartela_texto": "#F2E8D5",
+    "destaque": "#C8102E",
+    "texto_tela_fundo": "#000000B0"
+  },
+  "render": {
+    "gpu": "cpu",
+    "_gpu": "auto | nvenc | amf | qsv | cpu",
+    "processos": 2,
+    "remotion": true,
+    "concorrencia_remotion": 2,
+    "gl_remotion": "swiftshader",
+    "parallax": false,
+    "colagem": false,
+    "transicao_dinamica_prob": 0,
+    "transicao_dinamica_intervalo": 5,
+    "_transicao_dinamica": "chance de um corte seco virar transição dinâmica (forma, cortina, fatias, mosaico) e intervalo mínimo em s entre elas; 0 desliga",
+    "colagem_fracao": 0.4,
+    "colagem_nota_min": 0.6,
+    "_colagem": "colagem editorial (pipeline/colagem.py, estilo explicativo BBC): auto = toda foto de pessoa nomeada (rotulo pessoa) + ~colagem_fracao das outras fotos, se o recorte for bom (nota) viram recorte P&B + texto gigante atrás + fio nome/ano; visual.colagem pede (foto ou vídeo); false desliga",
+    "transicao_foco": 0.6,
+    "intervalo_transicao_especial": 8,
+    "max_tipos_transicao_especial": 3,
+    "punch_min_plano": 8,
+    "punch_intervalo": 25,
+    "limpar_build": false,
+    "_limpar_build": "true = no fim do montar.py final (depois do MP4 e dos Shorts) apaga build/cenas, build/blocos, build/transicoes, build/shorts e video_mudo.mp4 (~10 GB por episódio longo). O próximo montar.py re-renderiza tudo do zero (narração, mídia e props do Remotion ficam)",
+    "_demo": "CPU fraca: gpu=cpu (libx264), processos=2, concorrencia_remotion=2. Numa máquina forte suba para processos=null (auto) e concorrencia_remotion=8.",
+    "_gl_remotion": "swiftshader = Chrome só com CPU (mais previsível em notebook sem GPU; medido igual ao 'angle' nas cenas desta demo)"
+  },
+  "shorts": {
+    "auto": false,
+    "n": 5,
+    "_auto": "true = o montar.py final gera final/shorts/ no mesmo render, a partir de uma versão do vídeo sem rótulos/destaques (apagada no fim). --sem-shorts pula. Trechos: storyboard.shorts tem prioridade; o resto é escolhido sozinho",
+    "selecao": "llm",
+    "llm": "anthropic/claude-haiku-5.5",
+    "llm_candidatos": 8,
+    "edicao": {
+      "ativo": true,
+      "legenda": "pop",
+      "punch": false,
+      "whoosh": true,
+      "barra": true,
+      "loop": true,
+      "cortes_secos": true,
+      "vertical": true,
+      "marca": true,
+      "ajustar_graficos": true,
+      "fx": true,
+      "cta": "auto"
+    },
+    "_edicao": "edição dinâmica dos Shorts (shorts.py): legenda com pastilha na palavra ativa, punch-in nas ênfases e assentamento nas trocas de plano, whoosh sintetizado nos cortes, barra de progresso no topo, fim que emenda no começo, transições lentas do longo viram corte seco, dominó renderizado em 9:16, recorte centrado na marcação, gráficos ampliados pelo conteúdo. fx (fx.py + render/cta/ShortFx.tsx, Remotion transparente): gancho cinético no lugar do título estático, transições que COBREM o corte (rasgo de papel nas emendas, cortina na troca foto↔gráfico, íris/fatias onde o longo tinha dissolve), raio de luz + whip-pan nos cortes comuns e rajada nas ênfases; fx=false volta aos cortes secos. ativo=false (ou --simples) volta ao corte simples",
+    "_selecao": "llm = candidatos de um LLM via OpenRouter (OPENROUTER_API_KEY; ~US$ 0,01 por episódio; cache em final/shorts/plano_llm.json) | heuristica = palavras-gancho (LINGUA). Sem chave/erro cai na heurística. O LLM só é chamado com --so-plano, --aceitar-propostas ou se faltar short no storyboard; abertura/fecho propostos NUNCA viram áudio sem estarem em storyboard.shorts. IDs de modelo mudam: confira em GET openrouter.ai/api/v1/models"
+  },
+  "cta": {
+    "_doc": "Chamadas animadas inscrever/like/comentar/combo (pipeline/cta.py, Remotion em render/cta, fundo transparente, sobrepostas depois do acabamento; fora da versão limpa dos Shorts). Pedidos: cena.cta {tipo, em, texto?, posicao?} e meta.cta {auto, pergunta, posicao, shorts}. auto = valor quando o episódio NÃO tem meta.cta (false: episódios antigos ficam iguais); com meta.cta o auto vale true. Nos Shorts: shorts.edicao.cta (auto | combo | inscrever | false) e shorts[].cta",
+    "ativo": false,
+    "auto": false,
+    "auto_tipos": [
+      "inscrever",
+      "like",
+      "comentar"
+    ],
+    "posicao": "dir_baixo",
+    "min_inicio": 20,
+    "intervalo_min": 45,
+    "inscrever_ate": 40,
+    "sfx": true,
+    "sfx_db": 0,
+    "_sfx_db": "ajuste dos sons dos CTAs (clique, pop, sininho, brilho — sintetizados, som.py) em dB, somado ao som.GANHO de cada um",
+    "concorrencia": 4
+  },
+  "custos": {
+    "voz_por_milhao_caracteres": 40,
+    "scribe_por_hora": 0.11
+  },
+  "som": {
+    "sfx": true,
+    "sfx_db": 0,
+    "_sfx_db": "ajuste global dos efeitos em dB (negativo = mais baixo)",
+    "musica_auto": false,
+    "musica_db_voz": -16,
+    "musica_db_pausa": -6,
+    "ducking_pausa_min": 0.6,
+    "freesound": {
+      "ativo": false,
+      "por_categoria": 5,
+      "_freesound": "SFX do freesound.org (precisa de FREESOUND_API_KEY no .env; sem chave = só sintetizados). Só CC0 e CC BY (BY entra sozinho na descrição). Cache em assets/sfx/_freesound/<categoria>/ + manifesto.json; 'python pipeline/som.py --freesound' baixa/atualiza. 'buscas' sobrescreve a consulta/duração de uma categoria: {\"whoosh\": {\"busca\": \"whoosh swoosh\", \"dur\": [0.3, 2.0]}}",
+      "buscas": {}
+    },
+    "_musica_db": "ganho (dB) sobre a trilha já normalizada (-20 LUFS): sob a voz = mesmo nível do antigo 0.35 + sidechain (≈ -16 dB); em pausas > ducking_pausa_min s, cartelas e capítulos = 10 dB acima. Rampas de 300 ms (descida centrada 150 ms antes da fala)"
+  }
+}

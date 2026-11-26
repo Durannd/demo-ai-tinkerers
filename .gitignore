@@ -1,0 +1,21 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+render/public/cache/
+render/public/fontes/
+render/.fila*.json
+# modelo whisper baixado pelo scripts/preparar.ps1 (~460 MB)
+assets/modelos/
+assets/musica/*
+!assets/musica/LEIA-ME.md
+assets/sfx/_gerados/
+# rascunhos de episódio: não versionar render intermediário...
+episodios/*/build/
+# ...nem episódios de teste
+episodios/zz-*/
+episodios/_testes/
+# MAS o episódio de reserva (plano B) leva narração em cache e o MP4 pronto
+!episodios/demo-reserva/audio/
+!episodios/demo-reserva/final/

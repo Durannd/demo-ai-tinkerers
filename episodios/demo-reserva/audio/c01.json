@@ -1,0 +1,88 @@
+{
+  "hash": "30ac0bb418e9",
+  "texto": "Some zero vírgula um com zero vírgula dois no computador. Não dá zero vírgula três.",
+  "duracao": 6.15852,
+  "provedor": "gemini",
+  "palavras": [
+    {
+      "texto": "Some",
+      "ini": 0.0,
+      "fim": 0.7
+    },
+    {
+      "texto": "zero",
+      "ini": 0.7,
+      "fim": 1.12
+    },
+    {
+      "texto": "vírgula",
+      "ini": 1.12,
+      "fim": 1.8
+    },
+    {
+      "texto": "um",
+      "ini": 1.12,
+      "fim": 1.8
+    },
+    {
+      "texto": "com",
+      "ini": 1.8,
+      "fim": 2.06
+    },
+    {
+      "texto": "zero",
+      "ini": 2.06,
+      "fim": 2.42
+    },
+    {
+      "texto": "vírgula",
+      "ini": 2.42,
+      "fim": 3.08
+    },
+    {
+      "texto": "dois",
+      "ini": 2.42,
+      "fim": 3.08
+    },
+    {
+      "texto": "no",
+      "ini": 3.08,
+      "fim": 3.3
+    },
+    {
+      "texto": "computador.",
+      "ini": 3.3,
+      "fim": 3.92
+    },
+    {
+      "texto": "Não",
+      "ini": 4.36,
+      "fim": 4.76
+    },
+    {
+      "texto": "dá",
+      "ini": 4.76,
+      "fim": 5.0
+    },
+    {
+      "texto": "zero",
+      "ini": 5.0,
+      "fim": 5.32
+    },
+    {
+      "texto": "vírgula",
+      "ini": 5.32,
+      "fim": 5.9
+    },
+    {
+      "texto": "três.",
+      "ini": 5.32,
+      "fim": 5.9
+    }
+  ],
+  "gemini": {
+    "modelo": "gemini-2.5-flash-preview-tts",
+    "voz": "Algenib"
+  },
+  "casamento": 1.0
+}

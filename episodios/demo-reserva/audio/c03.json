@@ -1,0 +1,88 @@
+{
+  "hash": "230d66713779",
+  "texto": "Sessenta e quatro bits: é o que o formato mais comum usa para cada número.",
+  "duracao": 5.407423,
+  "provedor": "gemini",
+  "palavras": [
+    {
+      "texto": "Sessenta",
+      "ini": 0.0,
+      "fim": 1.0
+    },
+    {
+      "texto": "e",
+      "ini": 0.0,
+      "fim": 1.0
+    },
+    {
+      "texto": "quatro",
+      "ini": 0.0,
+      "fim": 1.0
+    },
+    {
+      "texto": "bits:",
+      "ini": 1.0,
+      "fim": 1.74
+    },
+    {
+      "texto": "é",
+      "ini": 1.74,
+      "fim": 2.38
+    },
+    {
+      "texto": "o",
+      "ini": 2.38,
+      "fim": 2.46
+    },
+    {
+      "texto": "que",
+      "ini": 2.46,
+      "fim": 2.56
+    },
+    {
+      "texto": "o",
+      "ini": 2.56,
+      "fim": 2.62
+    },
+    {
+      "texto": "formato",
+      "ini": 2.62,
+      "fim": 3.0
+    },
+    {
+      "texto": "mais",
+      "ini": 3.0,
+      "fim": 3.24
+    },
+    {
+      "texto": "comum",
+      "ini": 3.24,
+      "fim": 3.62
+    },
+    {
+      "texto": "usa",
+      "ini": 3.62,
+      "fim": 4.14
+    },
+    {
+      "texto": "para",
+      "ini": 4.14,
+      "fim": 4.32
+    },
+    {
+      "texto": "cada",
+      "ini": 4.32,
+      "fim": 4.56
+    },
+    {
+      "texto": "número.",
+      "ini": 4.56,
+      "fim": 4.88
+    }
+  ],
+  "gemini": {
+    "modelo": "gemini-2.5-flash-preview-tts",
+    "voz": "Algenib"
+  },
+  "casamento": 1.0
+}

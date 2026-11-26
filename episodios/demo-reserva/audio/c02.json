@@ -1,0 +1,68 @@
+{
+  "hash": "4b602e5bfdbb",
+  "texto": "Nós contamos na base dez. O computador conta na base dois.",
+  "duracao": 5.572714,
+  "provedor": "gemini",
+  "palavras": [
+    {
+      "texto": "Nós",
+      "ini": 0.0,
+      "fim": 0.64
+    },
+    {
+      "texto": "contamos",
+      "ini": 0.64,
+      "fim": 1.32
+    },
+    {
+      "texto": "na",
+      "ini": 1.32,
+      "fim": 1.58
+    },
+    {
+      "texto": "base",
+      "ini": 1.58,
+      "fim": 1.88
+    },
+    {
+      "texto": "dez.",
+      "ini": 1.88,
+      "fim": 2.34
+    },
+    {
+      "texto": "O",
+      "ini": 2.78,
+      "fim": 2.84
+    },
+    {
+      "texto": "computador",
+      "ini": 2.84,
+      "fim": 3.62
+    },
+    {
+      "texto": "conta",
+      "ini": 3.62,
+      "fim": 4.1
+    },
+    {
+      "texto": "na",
+      "ini": 4.1,
+      "fim": 4.36
+    },
+    {
+      "texto": "base",
+      "ini": 4.36,
+      "fim": 4.7
+    },
+    {
+      "texto": "dois.",
+      "ini": 4.7,
+      "fim": 5.02
+    }
+  ],
+  "gemini": {
+    "modelo": "gemini-2.5-flash-preview-tts",
+    "voz": "Algenib"
+  },
+  "casamento": 1.0
+}

@@ -1,0 +1,83 @@
+{
+  "hash": "b8356e1c0f40",
+  "texto": "Não é um defeito do seu código. É uma aproximação, e vale saber disso.",
+  "duracao": 5.915153,
+  "provedor": "gemini",
+  "palavras": [
+    {
+      "texto": "Não",
+      "ini": 0.0,
+      "fim": 0.6
+    },
+    {
+      "texto": "é",
+      "ini": 0.6,
+      "fim": 0.84
+    },
+    {
+      "texto": "um",
+      "ini": 0.84,
+      "fim": 0.96
+    },
+    {
+      "texto": "defeito",
+      "ini": 0.96,
+      "fim": 1.46
+    },
+    {
+      "texto": "do",
+      "ini": 1.46,
+      "fim": 1.58
+    },
+    {
+      "texto": "seu",
+      "ini": 1.58,
+      "fim": 1.74
+    },
+    {
+      "texto": "código.",
+      "ini": 1.74,
+      "fim": 2.18
+    },
+    {
+      "texto": "É",
+      "ini": 2.52,
+      "fim": 2.7
+    },
+    {
+      "texto": "uma",
+      "ini": 2.7,
+      "fim": 2.86
+    },
+    {
+      "texto": "aproximação,",
+      "ini": 2.86,
+      "fim": 3.9
+    },
+    {
+      "texto": "e",
+      "ini": 4.32,
+      "fim": 4.54
+    },
+    {
+      "texto": "vale",
+      "ini": 4.54,
+      "fim": 4.76
+    },
+    {
+      "texto": "saber",
+      "ini": 4.76,
+      "fim": 5.04
+    },
+    {
+      "texto": "disso.",
+      "ini": 5.04,
+      "fim": 5.44
+    }
+  ],
+  "gemini": {
+    "modelo": "gemini-2.5-flash-preview-tts",
+    "voz": "Algenib"
+  },
+  "casamento": 1.0
+}

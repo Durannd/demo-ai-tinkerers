@@ -1,0 +1,174 @@
+{
+  "versao": 2,
+  "meta": {
+    "slug": "demo-reserva",
+    "titulo": "Por que 0,1 + 0,2 não dá 0,3 no computador",
+    "canal": "demo",
+    "idioma": "pt-BR",
+    "descricao": "Vídeo de demonstração: por que o computador erra uma conta simples com decimais.",
+    "tags": [
+      "demonstração",
+      "programação",
+      "ponto flutuante"
+    ]
+  },
+  "cenas": [
+    {
+      "id": "c01",
+      "bloco": "gancho",
+      "narracao": "Some zero vírgula um com zero vírgula dois no computador. Não dá zero vírgula três.",
+      "visual": {
+        "tipo": "citacao",
+        "citacao": {
+          "texto": "0.1 + 0.2 = **0.30000000000000004**",
+          "autor": "Python, JavaScript e outras linguagens",
+          "contexto": "resultado real no console"
+        }
+      }
+    },
+    {
+      "id": "c02",
+      "bloco": "contexto",
+      "narracao": "Nós contamos na base dez. O computador conta na base dois.",
+      "visual": {
+        "tipo": "comparacao",
+        "comparacao": {
+          "modo": "numeros",
+          "a": {
+            "rotulo": "nós: decimal",
+            "valor": 10,
+            "unidade": "base",
+            "ancora": "dez"
+          },
+          "b": {
+            "rotulo": "computador: binário",
+            "valor": 2,
+            "unidade": "base",
+            "ancora": "dois"
+          }
+        }
+      }
+    },
+    {
+      "id": "c03",
+      "bloco": "contexto",
+      "narracao": "Sessenta e quatro bits: é o que o formato mais comum usa para cada número.",
+      "visual": {
+        "tipo": "numero",
+        "numero": {
+          "valor": 64,
+          "unidade": "bits por número (double)",
+          "ancora": "sessenta"
+        }
+      }
+    },
+    {
+      "id": "c04",
+      "bloco": "desenvolvimento",
+      "narracao": "Em binário, um décimo é uma dízima sem fim. Não cabe, então o computador guarda uma aproximação.",
+      "visual": {
+        "tipo": "icones",
+        "icones": {
+          "modo": "fileira",
+          "itens": [
+            {
+              "icone": "interrogacao",
+              "rotulo": "0,1 em binário",
+              "em": "décimo"
+            },
+            {
+              "icone": "x",
+              "rotulo": "não cabe",
+              "em": "cabe"
+            },
+            {
+              "icone": "engrenagem",
+              "rotulo": "aproximação",
+              "em": "aproximação"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c05",
+      "bloco": "desenvolvimento",
+      "narracao": "O padrão que define isso é de mil novecentos e oitenta e cinco, e foi revisado duas vezes.",
+      "visual": {
+        "tipo": "linha_do_tempo",
+        "linha_do_tempo": {
+          "eventos": [
+            {
+              "data": "1985",
+              "rotulo": "IEEE 754",
+              "ancora": "novecentos"
+            },
+            {
+              "data": "2008",
+              "rotulo": "1ª revisão",
+              "ancora": "revisado"
+            },
+            {
+              "data": "2019",
+              "rotulo": "2ª revisão",
+              "ancora": "vezes"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c06",
+      "bloco": "conclusao",
+      "narracao": "Para dinheiro, use centavos inteiros: dez centavos, não zero vírgula um.",
+      "visual": {
+        "tipo": "icones",
+        "icones": {
+          "modo": "fichas",
+          "fichas": [
+            {
+              "texto": "10",
+              "numero": "int",
+              "legenda": "centavos: exato",
+              "em": "dez"
+            },
+            {
+              "texto": "0,1",
+              "legenda": "decimal: aproximado",
+              "em": "vírgula"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c07",
+      "bloco": "conclusao",
+      "narracao": "Não é um defeito do seu código. É uma aproximação, e vale saber disso.",
+      "visual": {
+        "tipo": "citacao",
+        "citacao": {
+          "texto": "Não é um **defeito**. É uma **aproximação**."
+        }
+      }
+    }
+  ],
+  "fontes": [
+    {
+      "afirmacao": "0.1 + 0.2 resulta em 0.30000000000000004 em linguagens que usam ponto flutuante binário IEEE 754",
+      "url": "https://0.30000000000000004.com/",
+      "cenas": [
+        "c01",
+        "c04"
+      ]
+    },
+    {
+      "afirmacao": "IEEE 754: formato double de 64 bits; padrão de 1985, revisões de 2008 e 2019",
+      "url": "https://en.wikipedia.org/wiki/IEEE_754",
+      "cenas": [
+        "c03",
+        "c05"
+      ]
+    }
+  ]
+}

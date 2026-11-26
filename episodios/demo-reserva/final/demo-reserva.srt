@@ -1,0 +1,71 @@
+1
+00:00:00,000 --> 00:00:02,420
+Some zero vírgula um com zero
+
+2
+00:00:02,420 --> 00:00:03,920
+vírgula dois no computador.
+
+3
+00:00:04,360 --> 00:00:05,900
+Não dá zero vírgula três.
+
+4
+00:00:06,500 --> 00:00:08,840
+Nós contamos na base dez.
+
+5
+00:00:09,280 --> 00:00:11,520
+O computador conta na base dois.
+
+6
+00:00:12,433 --> 00:00:15,433
+Sessenta e quatro bits: é o que o formato
+
+7
+00:00:15,433 --> 00:00:17,313
+mais comum usa para cada número.
+
+8
+00:00:18,200 --> 00:00:20,240
+Em binário, um décimo
+
+9
+00:00:20,240 --> 00:00:21,940
+é uma dízima sem fim.
+
+10
+00:00:22,500 --> 00:00:24,520
+Não cabe, então o computador
+
+11
+00:00:24,520 --> 00:00:25,940
+guarda uma aproximação.
+
+12
+00:00:26,300 --> 00:00:28,340
+O padrão que define isso é
+
+13
+00:00:28,340 --> 00:00:29,720
+de mil novecentos e oitenta e cinco,
+
+14
+00:00:29,720 --> 00:00:32,320
+e foi revisado duas vezes.
+
+15
+00:00:32,933 --> 00:00:35,813
+Para dinheiro, use centavos inteiros:
+
+16
+00:00:36,153 --> 00:00:38,913
+dez centavos, não zero vírgula um.
+
+17
+00:00:40,067 --> 00:00:42,247
+Não é um defeito do seu código.
+
+18
+00:00:42,587 --> 00:00:45,507
+É uma aproximação, e vale saber disso.

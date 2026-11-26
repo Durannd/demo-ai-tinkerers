@@ -1,0 +1,9 @@
+# Dependências mínimas da DEMO (validar -> narrar -> montar --rascunho). Python 3.10+ (testado em 3.12).
+requests>=2.31
+jsonschema>=4.20
+Pillow>=10.1
+numpy>=1.26
+opencv-python-headless>=4.9
+# alinhador "whisper" (tempos por palavra, offline, CPU int8). Instalação normal (com dependências):
+# no repo original usa-se --no-deps só para não trocar o onnxruntime-directml; aqui não há GPU, então tanto faz.
+faster-whisper==1.2.1

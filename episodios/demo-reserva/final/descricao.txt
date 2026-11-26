@@ -1,0 +1,13 @@
+Vídeo de demonstração: por que o computador erra uma conta simples com decimais.
+
+Capítulos:
+0:00 Introdução
+0:18 Desenvolvimento
+0:32 Conclusão
+
+Fontes:
+- 0.1 + 0.2 resulta em 0.30000000000000004 em linguagens que usam pon…: https://0.30000000000000004.com/
+- IEEE 754: https://en.wikipedia.org/wiki/IEEE_754
+
+
+Narração com voz sintética.

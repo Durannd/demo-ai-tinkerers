@@ -1,0 +1,10 @@
+{
+  "_doc": "Canal Demo (pt-BR). O config.json da raiz já é o base; aqui ficam voz e identidade do canal.",
+  "canal": {"nome": "Canal Demo", "handle": ""},
+  "voz": {
+    "alinhador": "whisper",
+    "provedor": "gemini",
+    "stutter_pausa_min": 0.7,
+    "gemini": {"voz": "Algenib"}
+  }
+}

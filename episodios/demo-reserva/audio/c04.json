@@ -1,0 +1,98 @@
+{
+  "hash": "2e3d956add31",
+  "texto": "Em binário, um décimo é uma dízima sem fim. Não cabe, então o computador guarda uma aproximação.",
+  "duracao": 7.740173,
+  "provedor": "gemini",
+  "palavras": [
+    {
+      "texto": "Em",
+      "ini": 0.0,
+      "fim": 0.48
+    },
+    {
+      "texto": "binário,",
+      "ini": 0.48,
+      "fim": 1.04
+    },
+    {
+      "texto": "um",
+      "ini": 1.3,
+      "fim": 1.42
+    },
+    {
+      "texto": "décimo",
+      "ini": 1.42,
+      "fim": 2.04
+    },
+    {
+      "texto": "é",
+      "ini": 2.04,
+      "fim": 2.32
+    },
+    {
+      "texto": "uma",
+      "ini": 2.32,
+      "fim": 2.5
+    },
+    {
+      "texto": "dízima",
+      "ini": 2.5,
+      "fim": 3.1
+    },
+    {
+      "texto": "sem",
+      "ini": 3.1,
+      "fim": 3.42
+    },
+    {
+      "texto": "fim.",
+      "ini": 3.42,
+      "fim": 3.74
+    },
+    {
+      "texto": "Não",
+      "ini": 4.3,
+      "fim": 4.42
+    },
+    {
+      "texto": "cabe,",
+      "ini": 4.42,
+      "fim": 4.74
+    },
+    {
+      "texto": "então",
+      "ini": 5.18,
+      "fim": 5.48
+    },
+    {
+      "texto": "o",
+      "ini": 5.48,
+      "fim": 5.7
+    },
+    {
+      "texto": "computador",
+      "ini": 5.7,
+      "fim": 6.32
+    },
+    {
+      "texto": "guarda",
+      "ini": 6.32,
+      "fim": 6.84
+    },
+    {
+      "texto": "uma",
+      "ini": 6.84,
+      "fim": 6.98
+    },
+    {
+      "texto": "aproximação.",
+      "ini": 6.98,
+      "fim": 7.74
+    }
+  ],
+  "gemini": {
+    "modelo": "gemini-2.5-flash-preview-tts",
+    "voz": "Algenib"
+  },
+  "casamento": 0.941
+}

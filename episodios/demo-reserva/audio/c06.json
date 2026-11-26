@@ -1,0 +1,68 @@
+{
+  "hash": "d648e66cae60",
+  "texto": "Para dinheiro, use centavos inteiros: dez centavos, não zero vírgula um.",
+  "duracao": 6.799471,
+  "provedor": "gemini",
+  "palavras": [
+    {
+      "texto": "Para",
+      "ini": 0.0,
+      "fim": 0.48
+    },
+    {
+      "texto": "dinheiro,",
+      "ini": 0.48,
+      "fim": 0.92
+    },
+    {
+      "texto": "use",
+      "ini": 1.38,
+      "fim": 1.62
+    },
+    {
+      "texto": "centavos",
+      "ini": 1.62,
+      "fim": 2.3
+    },
+    {
+      "texto": "inteiros:",
+      "ini": 2.3,
+      "fim": 2.88
+    },
+    {
+      "texto": "dez",
+      "ini": 3.22,
+      "fim": 3.52
+    },
+    {
+      "texto": "centavos,",
+      "ini": 3.52,
+      "fim": 4.36
+    },
+    {
+      "texto": "não",
+      "ini": 4.56,
+      "fim": 4.86
+    },
+    {
+      "texto": "zero",
+      "ini": 4.86,
+      "fim": 5.32
+    },
+    {
+      "texto": "vírgula",
+      "ini": 5.32,
+      "fim": 5.98
+    },
+    {
+      "texto": "um.",
+      "ini": 5.32,
+      "fim": 5.98
+    }
+  ],
+  "gemini": {
+    "modelo": "gemini-2.5-flash-preview-tts",
+    "voz": "Algenib"
+  },
+  "casamento": 1.0
+}

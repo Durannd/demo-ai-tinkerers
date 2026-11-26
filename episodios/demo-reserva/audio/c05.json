@@ -1,0 +1,103 @@
+{
+  "hash": "08fb63a619a5",
+  "texto": "O padrão que define isso é de mil novecentos e oitenta e cinco, e foi revisado duas vezes.",
+  "duracao": 6.291747,
+  "provedor": "gemini",
+  "palavras": [
+    {
+      "texto": "O",
+      "ini": 0.0,
+      "fim": 0.4
+    },
+    {
+      "texto": "padrão",
+      "ini": 0.4,
+      "fim": 0.78
+    },
+    {
+      "texto": "que",
+      "ini": 0.78,
+      "fim": 0.98
+    },
+    {
+      "texto": "define",
+      "ini": 0.98,
+      "fim": 1.34
+    },
+    {
+      "texto": "isso",
+      "ini": 1.34,
+      "fim": 1.74
+    },
+    {
+      "texto": "é",
+      "ini": 1.74,
+      "fim": 2.04
+    },
+    {
+      "texto": "de",
+      "ini": 2.04,
+      "fim": 2.18
+    },
+    {
+      "texto": "mil",
+      "ini": 2.18,
+      "fim": 3.42
+    },
+    {
+      "texto": "novecentos",
+      "ini": 2.18,
+      "fim": 3.42
+    },
+    {
+      "texto": "e",
+      "ini": 2.18,
+      "fim": 3.42
+    },
+    {
+      "texto": "oitenta",
+      "ini": 2.18,
+      "fim": 3.42
+    },
+    {
+      "texto": "e",
+      "ini": 2.18,
+      "fim": 3.42
+    },
+    {
+      "texto": "cinco,",
+      "ini": 2.18,
+      "fim": 3.42
+    },
+    {
+      "texto": "e",
+      "ini": 3.42,
+      "fim": 4.46
+    },
+    {
+      "texto": "foi",
+      "ini": 4.46,
+      "fim": 4.64
+    },
+    {
+      "texto": "revisado",
+      "ini": 4.64,
+      "fim": 5.28
+    },
+    {
+      "texto": "duas",
+      "ini": 5.28,
+      "fim": 5.58
+    },
+    {
+      "texto": "vezes.",
+      "ini": 5.58,
+      "fim": 6.02
+    }
+  ],
+  "gemini": {
+    "modelo": "gemini-2.5-flash-preview-tts",
+    "voz": "Algenib"
+  },
+  "casamento": 1.0
+}
