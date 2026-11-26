@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pipeline de vídeo por código</title>
+<meta name="description" content="Como um JSON vira um vídeo: roteiro por IA, voz, mídia, Remotion e FFmpeg.">
+<style>
+:root{
+  --bg:#0e1014; --panel:#161920; --panel2:#1c2029; --line:#2a2f3b; --text:#e8e3d8; --muted:#9aa0ad;
+  --amber:#e8b04a; --cyan:#62cfc7; --rose:#ef7a85; --green:#9bd37a; --violet:#b69cf0;
+  --mono:"Cascadia Code","Cascadia Mono",ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+  --sans:"Segoe UI Variable Text","Segoe UI",Inter,system-ui,-apple-system,Roboto,sans-serif;
+  --nav:230px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:24px;color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--amber)}
+code,pre,kbd{font-family:var(--mono)}
+:focus-visible{outline:2px solid var(--amber);outline-offset:3px;border-radius:4px}
+
+/* layout */
+.shell{display:grid;grid-template-columns:var(--nav) minmax(0,1fr);max-width:1280px;margin:0 auto}
+nav.side{position:sticky;top:0;align-self:start;height:100vh;padding:40px 22px;border-right:1px solid var(--line)}
+nav.side .brand{font:600 12px/1.3 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:28px}
+nav.side ol{list-style:none;margin:0;padding:0;counter-reset:n -1}
+nav.side li{counter-increment:n}
+nav.side a{display:flex;gap:10px;padding:7px 0;color:var(--muted);text-decoration:none;font-size:14px;border-left:2px solid transparent;padding-left:12px;margin-left:-14px;transition:color .15s,border-color .15s}
+nav.side a::before{content:counter(n,decimal-leading-zero);font:12px/1.9 var(--mono);color:#5c6272}
+nav.side a:hover{color:var(--text)}
+nav.side a.on{color:var(--text);border-left-color:var(--amber)}
+nav.side a.on::before{color:var(--amber)}
+main{padding:56px clamp(20px,5vw,72px) 120px;min-width:0}
+section{padding:72px 0 8px;border-top:1px solid var(--line)}
+section:first-of-type{border-top:0;padding-top:0}
+.eyebrow{font:600 12px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin:0 0 14px}
+h1{font-size:clamp(34px,5.2vw,58px);line-height:1.05;margin:0 0 18px;letter-spacing:-.02em;font-weight:700}
+h2{font-size:clamp(26px,3.2vw,36px);line-height:1.15;margin:0 0 14px;letter-spacing:-.015em}
+h3{font-size:17px;margin:32px 0 10px;color:var(--text)}
+p{margin:0 0 14px;max-width:68ch}
+.lead{font-size:19px;color:#cfcabd;max-width:62ch}
+.muted{color:var(--muted)}
+ul.t{padding-left:20px;margin:0 0 16px;max-width:72ch}
+ul.t li{margin:6px 0}
+kbd,code.i{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:.88em;color:var(--cyan)}
+
+/* pipeline diagram */
+.flow{display:flex;gap:0;margin:34px 0 8px;overflow-x:auto;padding-bottom:8px}
+.node{flex:1 1 112px;min-width:112px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 11px 10px;position:relative}
+.node + .node{margin-left:20px}
+.node + .node::before{content:"";position:absolute;left:-20px;top:50%;width:20px;height:1px;background:var(--amber)}
+.node + .node::after{content:"";position:absolute;left:-7px;top:calc(50% - 4px);border:4px solid transparent;border-left:7px solid var(--amber);border-right:0}
+.node b{display:block;font-size:14px;margin-bottom:4px}
+.node span{display:block;font:12px/1.4 var(--mono);color:var(--muted)}
+.node .ar{color:var(--cyan);margin-top:8px}
+.node.ai{border-color:#6a5530;background:linear-gradient(180deg,#231d10,var(--panel))}
+
+/* cards */
+.grid{display:grid;gap:14px;margin:18px 0}
+.g3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.g2 .codewrap{align-self:start;min-width:0}
+.g2 pre.code{white-space:pre-wrap;overflow-wrap:anywhere}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 18px 8px}
+.card h4{margin:0 0 6px;font-size:15px}
+.card p{font-size:14.5px;color:#c9c4b8}
+.card .n{font:600 12px var(--mono);color:var(--amber);letter-spacing:.1em}
+.pause{display:inline-block;margin-top:2px;font:11px/1 var(--mono);color:#e8b04a;border:1px solid #6a5530;border-radius:99px;padding:3px 8px}
+
+/* code */
+.codewrap{margin:16px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#11141a}
+.codewrap header{display:flex;justify-content:space-between;gap:12px;padding:9px 14px;background:var(--panel);border-bottom:1px solid var(--line);font:12px var(--mono);color:var(--muted)}
+pre.code{margin:0;padding:16px 18px;overflow:auto;font-size:13px;line-height:1.6;tab-size:2;color:#d7d3c8}
+.tk-s{color:var(--green)} .tk-n{color:var(--amber)} .tk-k{color:var(--violet)} .tk-c{color:#6f7686;font-style:italic} .tk-key{color:var(--cyan)} .tk-f{color:#e8c37a}
+
+/* viewer */
+.viewer{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel);margin:22px 0}
+.viewer .tabs{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;padding:10px;background:var(--panel2);border-bottom:1px solid var(--line)}
+.tab{font:13px var(--mono);color:var(--muted);background:transparent;border:1px solid transparent;border-radius:8px;padding:7px 11px;cursor:pointer}
+.tab:hover{color:var(--text)}
+.tab[aria-selected=true]{background:#2a2417;border-color:#6a5530;color:var(--amber)}
+.vtext{padding:16px;min-width:0;border-right:1px solid var(--line)}
+.vtext .narr{font-size:15px;line-height:1.55;margin:0 0 12px;color:#d9d4c8}
+.vtext mark{background:#3a2e12;color:var(--amber);border-radius:4px;padding:0 3px}
+.vtext .lab{font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.vtext pre.code{padding:12px;background:#11141a;border:1px solid var(--line);border-radius:10px;max-height:380px;white-space:pre-wrap;overflow-wrap:anywhere}
+.vclip{padding:16px;display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:center;background:#0b0d11}
+.vclip video{max-width:100%;max-height:420px;border-radius:8px;background:#000}
+.vclip .cap{font:12px var(--mono);color:var(--muted);text-align:center}
+
+/* media grid */
+.clips{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin:18px 0;align-items:start}
+.clips.h{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+figure video{display:block;width:100%;background:#000;aspect-ratio:var(--ar,9/16);object-fit:cover}
+figure.wide{grid-column:span 2}
+figcaption{padding:10px 12px 12px;font-size:13.5px;color:#c9c4b8}
+figcaption b{display:block;color:var(--text);font-size:14px;margin-bottom:2px}
+figcaption code{font-size:12px;color:var(--cyan)}
+
+/* audio */
+.voices{display:grid;gap:10px;margin:16px 0}
+.voice{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+.voice.pick{border-color:#6a5530;background:#1f1a0f}
+.voice b{min-width:110px;font:600 14px var(--mono)}
+.voice audio{flex:1;min-width:0;height:36px}
+.voice .tag{font:11px var(--mono);color:var(--amber)}
+.said{border-left:3px solid var(--amber);padding:4px 0 4px 14px;color:#cfcabd;font-style:italic;max-width:62ch;margin:14px 0}
+
+/* timeline (decisões) */
+.steps{list-style:none;margin:18px 0;padding:0;border-left:1px solid var(--line)}
+.steps li{position:relative;padding:2px 0 18px 22px;max-width:72ch}
+.steps li::before{content:"";position:absolute;left:-5px;top:9px;width:9px;height:9px;border-radius:50%;background:var(--bg);border:2px solid var(--amber)}
+.steps li.bad::before{border-color:var(--rose)}
+.steps li.ok::before{background:var(--amber)}
+.steps b{display:block;font-size:15px}
+.steps span{color:#c0bbaf;font-size:14.5px}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 18px}
+.chip{font:13px var(--mono);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:#d4cfc3}
+.stack{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.stack .card h4{font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}
+.stack ul{margin:0 0 12px;padding-left:18px;font-size:14.5px;color:#d0cbbf}
+
+/* duck chart */
+.chart{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin:16px 0}
+.chart svg{width:100%;height:auto;display:block}
+.chart figcaption{padding:8px 2px 0}
+.tbl{width:100%;max-width:760px;border-collapse:collapse;margin:14px 0 6px;font-size:14.5px}
+.tbl th,.tbl td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tbl td.t{font:14px var(--mono);color:var(--amber);white-space:nowrap}
+.tbl tr.hi td{background:#1f1a0f}
+.demovideo{display:block;width:100%;max-width:760px;border-radius:12px;border:1px solid var(--line);background:#000;margin:14px 0 6px}
+.note{border:1px dashed #4a4f5c;border-radius:10px;padding:12px 14px;font-size:14px;color:#b9b4a8;margin:16px 0;max-width:72ch}
+
+@media (max-width:900px){
+  .shell{display:block}
+  nav.side{position:sticky;height:auto;top:0;z-index:5;background:var(--bg);padding:10px 14px;border-right:0;border-bottom:1px solid var(--line)}
+  nav.side .brand{display:none}
+  nav.side ol{display:flex;gap:16px;overflow-x:auto}
+  nav.side a{border-left:0;margin:0;padding:6px 0;white-space:nowrap}
+  .viewer{grid-template-columns:1fr}
+  .vtext{border-right:0;border-bottom:1px solid var(--line)}
+  figure.wide{grid-column:auto}
+  .voice{flex-wrap:wrap}
+  .voice audio{flex-basis:100%}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav class="side" aria-label="Seções">
+  <div class="brand">Pipeline de vídeo<br>por código</div>
+  <ol id="toc">
+    <li><a href="#visao">Visão geral</a></li>
+    <li><a href="#storyboard">Storyboard</a></li>
+    <li><a href="#roteiro-ia">Pesquisa e roteiro</a></li>
+    <li><a href="#voz">Voz</a></li>
+    <li><a href="#midia">Mídia e IA</a></li>
+    <li><a href="#remotion">Remotion</a></li>
+    <li><a href="#ffmpeg">FFmpeg e áudio</a></li>
+    <li><a href="#fim">Fechamento</a></li>
+    <li><a href="#demo">Demonstração</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ============ 0 ============ -->
+<section id="visao">
+  <p class="eyebrow">Visão geral</p>
+  <h1>Um JSON entra.<br>Um vídeo sai.</h1>
+  <p class="lead">Um harness em Python (com um projeto Remotion em Node) que transforma um storyboard em vídeo longo pronto para publicar. Cada etapa lê arquivos e grava arquivos, com cache por hash: só se refaz o que mudou.</p>
+
+  <div class="flow" role="img" aria-label="Fluxo do pipeline">
+    <div class="node ai"><b>Pesquisa e roteiro</b><span>feito pela IA, aprovado por mim</span><span class="ar">dossie.md · roteiro.md</span></div>
+    <div class="node"><b>Storyboard</b><span>contrato validado</span><span class="ar">storyboard.json</span></div>
+    <div class="node"><b>Voz + tempos</b><span>TTS e alinhamento</span><span class="ar">audio/cXX.mp3 + .json</span></div>
+    <div class="node"><b>Mídia</b><span>bancos livres e IA</span><span class="ar">midia/ · creditos.json</span></div>
+    <div class="node"><b>Cenas</b><span>React + Remotion</span><span class="ar">build/cenas/*.mp4</span></div>
+    <div class="node"><b>Montagem</b><span>FFmpeg e áudio</span><span class="ar">final/*.mp4 · .srt</span></div>
+  </div>
+
+  <div class="note">Ambiente: Windows e GPU AMD (sem CUDA). Isso decide o encoder (<code class="i">h264_amf</code>), o provedor ONNX (DirectML) e por que a IA local roda num venv separado. Nada nesta página é renderizado ao vivo: os vídeos são clipes já gerados.</div>
+</section>
+
+<!-- ============ 1 ============ -->
+<section id="storyboard">
+  <p class="eyebrow">01 · O contrato</p>
+  <h2>Storyboard: o JSON que guia tudo</h2>
+  <p>Três blocos: <code class="i">meta</code>, <code class="i">cenas</code> e <code class="i">fontes</code>. Na maioria das vezes eu nem escrevo esse JSON: a IA gera a partir do roteiro aprovado e eu reviso. Por isso o formato precisa ser claro e validável. Ele é o contrato entre quem escreve (IA ou pessoa) e quem produz.</p>
+
+  <div class="codewrap">
+    <header><span>estrutura simplificada</span><span>storyboard.json</span></header>
+<pre class="code" data-lang="json" data-src="s-estrutura"></pre>
+  </div>
+
+  <h3>Âncoras: preso à palavra, não ao tempo</h3>
+  <p>Sub-cortes, objetos e marcas apontam para uma <b>palavra da narração</b>. O tempo real só existe depois que a voz é alinhada. Clique numa cena real e veja o JSON, a palavra-âncora e o resultado:</p>
+
+  <div class="viewer" id="viewer">
+    <div class="tabs" role="tablist" aria-label="Cenas de exemplo"></div>
+    <div class="vtext">
+      <div class="lab">narração</div>
+      <p class="narr" id="v-narr"></p>
+      <div class="lab">json da cena</div>
+      <pre class="code" id="v-json" data-lang="json"></pre>
+    </div>
+    <div class="vclip">
+      <video id="v-video" muted loop playsinline preload="metadata"></video>
+      <div class="cap" id="v-cap"></div>
+    </div>
+  </div>
+
+  <h3>Validação em duas camadas</h3>
+  <ul class="t">
+    <li><b>Schema</b> (lib <code class="i">jsonschema</code>): campos, tipos e obrigatoriedade. Cada tipo de visual exige o seu sub-objeto.</li>
+    <li><b>Regras próprias</b> em <code class="i">validar.py</code>: erros bloqueiam (ex.: <code class="i">[VERIFICAR</code> na narração, âncora que não existe no texto), avisos não.</li>
+    <li><b>Variedade</b>: nenhum tipo de visual acima de 50% das cenas, no mínimo 4 tipos em episódios longos, no máximo 2 cenas seguidas iguais, gancho com pelo menos 6 mudanças visuais nos 30 s iniciais.</li>
+  </ul>
+  <div class="codewrap">
+    <header><span>trecho</span><span>pipeline/validar.py</span></header>
+<pre class="code" data-lang="py" data-src="s-validar"></pre>
+  </div>
+</section>
+
+<!-- ============ 2 ============ -->
+<section id="roteiro-ia">
+  <p class="eyebrow">02 · Antes do JSON</p>
+  <h2>Pesquisa e roteiro feitos pela IA</h2>
+  <p>É uma <i>skill</i> (instruções reutilizáveis): a IA age como pesquisadora e roteirista do canal. Antes de qualquer coisa, ela lê a "bíblia" do canal (tom, regras de escrita, exemplos) e o schema. O fluxo tem <b>uma parada para aprovação humana em cada etapa</b>.</p>
+
+  <div class="grid g3">
+    <div class="card"><span class="n">1</span><h4>Pautas</h4><p>5 propostas, checadas com busca na web para ver se há material confiável.</p><span class="pause">aprovação</span><p></p></div>
+    <div class="card"><span class="n">2</span><h4>Dossiê</h4><p>Pesquisa de verdade, com fonte primária quando possível. <b>Todo fato tem link</b>; "confirmado por 2+ fontes" fica separado de "disputado". Lista também a mídia livre que existe.</p><span class="pause">aprovação</span><p></p></div>
+    <div class="card"><span class="n">3</span><h4>Estrutura</h4><p>Blocos, capítulos como pergunta, loops abertos e duração estimada.</p><span class="pause">aprovação</span><p></p></div>
+    <div class="card"><span class="n">4</span><h4>Roteiro</h4><p>Narração completa no ritmo do canal (palavras por minuto). O que não está confirmado leva <code class="i">[VERIFICAR]</code>.</p><span class="pause">aprovação</span><p></p></div>
+    <div class="card"><span class="n">5</span><h4>Storyboard</h4><p>O roteiro aprovado é convertido <b>palavra por palavra</b> em JSON e importado: se não valida, volta para correção.</p><p></p></div>
+  </div>
+
+  <h3>O que o dossiê vira dentro do JSON</h3>
+  <p>A pesquisa não some: cada afirmação fica ligada à fonte e às cenas que dependem dela, e alimenta a descrição do vídeo.</p>
+  <div class="codewrap">
+    <header><span>bloco fontes</span><span>storyboard.json</span></header>
+<pre class="code" data-lang="json" data-src="s-fontes"></pre>
+  </div>
+
+  <h3>Regras que não podem falhar</h3>
+  <ul class="t">
+    <li>Nunca inventar fato, data, número, citação ou coordenada. Sem fonte, marca <code class="i">[VERIFICAR]</code>, e o storyboard não importa com essa marca.</li>
+    <li>Nada de rosto de pessoa real gerado por IA; nada de jornal, carta ou documento falso.</li>
+    <li>A IA propõe e pesquisa; <b>o roteiro e os fatos são aprovados por uma pessoa</b> antes de virar áudio.</li>
+  </ul>
+</section>
+
+<!-- ============ 3 ============ -->
+<section id="voz">
+  <p class="eyebrow">03 · Voz</p>
+  <h2>De onde vem a narração, e como ela vira tempo</h2>
+
+  <h3>Mesma frase, três vozes</h3>
+  <p class="said">"Em 2001, sete em cada dez carros novos vendidos no Brasil tinham o mesmo tamanho de motor: mil cilindradas. Parece gosto do brasileiro. Mas quem escolheu foi uma tabela de imposto."</p>
+  <div class="voices">
+    <div class="voice"><b>Charon</b><audio controls preload="none" src="assets/audio/gemini_Charon.mp3"></audio></div>
+    <div class="voice"><b>Orus</b><audio controls preload="none" src="assets/audio/gemini_Orus.mp3"></audio></div>
+    <div class="voice pick"><b>Algenib</b><audio controls preload="none" src="assets/audio/gemini_Algenib.mp3"></audio><span class="tag">escolhida</span></div>
+  </div>
+  <p class="muted" style="font-size:14px">Gemini TTS (<code class="i">gemini-2.5-flash-preview-tts</code>), com um prefixo de estilo ("tom de documentário, firme e natural").</p>
+
+  <h3>Provedores testados</h3>
+  <ol class="steps">
+    <li class="ok"><b>ElevenLabs v4 (via OpenRouter)</b><span>Referência de qualidade. Não devolve tempo por palavra, então o alinhamento é uma etapa separada.</span></li>
+    <li class="bad"><b>Chatterbox Multilingual pt-BR (local, GPU)</b><span>Roda na GPU via WanGP e não cobra por caractere, mas foi reprovado para a voz do canal em português.</span></li>
+    <li><b>Kokoro-82M (local, CPU)</b><span>ONNX; bom para inglês, e só inglês. O DirectML falha numa camada do modelo, então roda na CPU.</span></li>
+    <li class="ok"><b>Gemini TTS (voz Algenib)</b><span>Entrou quando o saldo da ElevenLabs acabou e depois de ouvir amostras. Cota diária por modelo, então o cache importa ainda mais.</span></li>
+  </ol>
+
+  <h3>Do áudio ao tempo de cada palavra</h3>
+  <div class="flow" role="img" aria-label="Alinhamento">
+    <div class="node"><b>TTS</b><span>mp3 por cena</span></div>
+    <div class="node"><b>Transcrição</b><span>Scribe v2 ou faster-whisper</span></div>
+    <div class="node"><b>Casamento</b><span>difflib com o texto do roteiro</span></div>
+    <div class="node"><b>Palavras</b><span>[{texto, ini, fim}] + taxa</span></div>
+  </div>
+  <p>Transcrevo o áudio e <b>comparo com o texto do roteiro</b>, palavra por palavra, para descobrir em que segundo cada uma foi dita (números viram palavras antes: "1990" vira "mil novecentos e noventa"). A <b>taxa de casamento</b> é a porcentagem de palavras do roteiro encontradas no áudio: abaixo de 85%, a voz leu algo diferente do roteiro. Uma heurística de "stutter" encurta pausas dentro de palavra; o limiar padrão tratava pausa natural do Gemini como engasgo, então foi ajustado.</p>
+
+</section>
+
+<!-- ============ 4 ============ -->
+<section id="midia">
+  <p class="eyebrow">04 · Mídia e IA</p>
+  <h2>Mídia com licença registrada, IA com trava</h2>
+
+  <h3>Bancos</h3>
+  <div class="chips"><span class="chip">Pexels</span><span class="chip">Pixabay</span><span class="chip">Wikimedia Commons</span><span class="chip">NASA</span><span class="chip">Internet Archive</span></div>
+  <ul class="t">
+    <li><b>Licença é dado, não opinião.</b> No Wikimedia só entram licenças livres: qualquer uma com NC, ND ou "fair use" é rejeitada. Cada download grava autor, licença e página em <code class="i">creditos.json</code>, e isso vira os créditos da descrição.</li>
+    <li><b>Pontuação dos candidatos:</b> resolução, proporção, licença, duração do vídeo e uma penalidade por reaproveitar a mesma página em outra cena.</li>
+    <li>O storyboard pode pedir um arquivo exato (<code class="i">File:Nome.jpg</code>); busca por texto livre é o último recurso.</li>
+  </ul>
+  <div class="codewrap">
+    <header><span>campos gravados por cena</span><span>midia/creditos.json</span></header>
+<pre class="code" data-lang="json" data-src="s-creditos"></pre>
+  </div>
+
+  <h3>IA generativa</h3>
+  <ul class="t">
+    <li>Provedores: Gemini (imagem e vídeo), fal.ai e <b>local</b> (Flux 2 Klein 4B para imagem; Wan 2.2 TI2V 5B para vídeo, via WanGP).</li>
+    <li><b>Trava de custo:</b> por padrão só simula. Gerar de verdade exige <code class="i">--confirmar</code>.</li>
+    <li><b>Ponte local:</b> o <code class="i">.venv</code> do repo chama por subprocess o Python do venv do WanGP, que carrega o modelo e imprime o resultado numa última linha <code class="i">RESULTADO {json}</code>. Nada de importar torch no ambiente principal.</li>
+    <li>Imagem de IA entra marcada como sintética nos créditos.</li>
+  </ul>
+</section>
+
+<!-- ============ 5 ============ -->
+<section id="remotion">
+  <p class="eyebrow">05 · Remotion</p>
+  <h2>Como as cenas animadas são feitas</h2>
+  <p>Remotion é um framework que gera vídeo a partir de componentes React. Em vez de editar numa linha do tempo, você escreve uma função que diz <b>como a tela deve ficar em cada quadro</b>. O exemplo abaixo é o menor possível: um título que aparece em fade durante o primeiro segundo.</p>
+  <div class="codewrap">
+    <header><span>exemplo mínimo (ilustrativo)</span><span>Titulo.tsx</span></header>
+<pre class="code" data-lang="ts" data-src="s-minimo"></pre>
+  </div>
+  <p>O Remotion chama esse componente <b>uma vez para cada quadro</b> do vídeo, sempre com um número de quadro diferente, e transforma cada resultado numa imagem. Depois junta as imagens num MP4. O mesmo número de quadro sempre gera a mesma imagem, e isso torna o resultado previsível e fácil de guardar em cache. No projeto, isso fica assim:</p>
+
+  <div class="grid g3">
+    <div class="card"><span class="n">1</span><h4>Cada cena é um componente</h4><p>Existe um componente para cada tipo de cena (<code class="i">Numero</code>, <code class="i">Domino</code>, <code class="i">Mapa</code>…). Um pequeno roteador, o <code class="i">Cena.tsx</code>, escolhe qual usar a partir do campo <code class="i">tipo</code> do storyboard.</p></div>
+    <div class="card"><span class="n">2</span><h4>O Python entrega os dados por props</h4><p>Antes de renderizar, o Python monta um JSON com tudo que a cena precisa: o texto, <b>o segundo em que cada palavra é dita</b>, as cores e o idioma. É assim que uma animação consegue "esperar" uma palavra da narração para começar.</p></div>
+    <div class="card"><span class="n">3</span><h4>Cada cena vira um MP4, com cache</h4><p>O Node renderiza todos os quadros da cena e gera um MP4. O cache guarda um hash das props <b>e do código</b> em <code class="i">render/src</code>: se você muda um componente, só as cenas que o usam são refeitas; as outras são reaproveitadas.</p></div>
+  </div>
+
+  <h3>Os três trechos reais</h3>
+  <p class="muted">À esquerda, o roteador que liga <code class="i">tipo</code> a componente. À direita, a cena <code class="i">Numero</code>: a contagem começa no quadro em que a palavra-âncora é dita e sobe com <code class="i">interpolate</code>, a mesma função do exemplo mínimo. Embaixo, o lado Python: monta as props, calcula o hash e só chama o Node para o que mudou.</p>
+
+  <div class="grid g2">
+    <div class="codewrap" style="margin:0">
+      <header><span>roteador de cenas</span><span>render/src/Cena.tsx</span></header>
+<pre class="code" data-lang="ts" data-src="s-cena"></pre>
+    </div>
+    <div class="codewrap" style="margin:0">
+      <header><span>cena Numero: contagem por interpolação</span><span>render/src/cenas/Numero.tsx</span></header>
+<pre class="code" data-lang="ts" data-src="s-numero"></pre>
+    </div>
+  </div>
+  <div class="codewrap">
+    <header><span>Python → Remotion: cache por hash e fila única</span><span>pipeline/remotion.py</span></header>
+<pre class="code" data-lang="py" data-src="s-remotion"></pre>
+  </div>
+
+  <h3>O que isso produz</h3>
+  <p>Trechos reais do episódio de exemplo. O texto de cada legenda mostra o que o JSON pediu.</p>
+  <div class="clips">
+    <figure style="--ar:9/16"><video muted loop playsinline preload="metadata" src="assets/clips/objetos_motor.mp4"></video><figcaption><b>Objeto na palavra dita</b>O bloco do motor entra quando a narração diz "motor". Imagem gerada, recortada com ISNet, ProRes 4444 com alfa. <code>objetos: [{objeto, em: "motor"}]</code></figcaption></figure>
+    <figure style="--ar:9/16"><video muted loop playsinline preload="metadata" src="assets/clips/objetos_chave.mp4"></video><figcaption><b>Ícone animado</b>A chave gira na palavra "porta". <code>objetos: [{icone: "chave", em: "porta"}]</code></figcaption></figure>
+    <figure style="--ar:9/16"><video muted loop playsinline preload="metadata" src="assets/clips/comparacao.mp4"></video><figcaption><b>Comparação de números</b>Cada barra cresce na palavra do seu valor. <code>comparacao: {modo: "numeros"}</code></figcaption></figure>
+    <figure style="--ar:9/16"><video muted loop playsinline preload="metadata" src="assets/clips/domino_numero.mp4"></video><figcaption><b>Dominó e contador</b>Os tempos de queda são calculados em Python para o som e a peça caírem no mesmo quadro. <code>domino: {numero: 5}</code></figcaption></figure>
+    <figure style="--ar:9/16"><video muted loop playsinline preload="metadata" src="assets/clips/fx_rasgo.mp4"></video><figcaption><b>Transição em Remotion</b>O corte "rasgo", renderizado com canal alfa e sobreposto no FFmpeg.</figcaption></figure>
+  </div>
+  <div class="clips h">
+    <figure style="--ar:16/9"><video muted loop playsinline preload="metadata" src="assets/clips/colagem_moldura.mp4"></video><figcaption><b>Foto histórica emoldurada</b>Arquivo tratado como documento: moldura, textura e, na palavra "vinte", a ficha <code>20%</code>.</figcaption></figure>
+    <figure style="--ar:16/9"><video muted loop playsinline preload="metadata" src="assets/clips/cta_inscreva.mp4"></video><figcaption><b>CTA animado</b>Botão de inscrição desenhado em Remotion e sobreposto depois do acabamento.</figcaption></figure>
+  </div>
+
+  <h3>Visão computacional: dois modelos pequenos, rodando local</h3>
+  <p>Duas etapas do pipeline usam modelos de IA que olham para uma foto. Ambos rodam na própria máquina, sem API paga. Duas siglas aparecem nos nomes, então vale defini-las:</p>
+  <div class="grid g2">
+    <div class="card"><h4>ONNX</h4><p>Um formato aberto para guardar um modelo de IA já treinado num único arquivo. Ele roda com o <i>onnxruntime</i>, uma biblioteca leve, <b>sem precisar do PyTorch</b>. Por isso esses modelos funcionam direto no ambiente Python principal do projeto.</p></div>
+    <div class="card"><h4>CPU e DirectML</h4><p>É onde o modelo executa. <b>CPU</b> é o processador comum. <b>DirectML</b> é uma API do Windows que usa a placa de vídeo, de qualquer fabricante: aqui, uma GPU AMD, que não tem CUDA. Sem GPU compatível, o modelo cai para a CPU.</p></div>
+  </div>
+
+  <h3>ISNet (ONNX, CPU): recorta o assunto de uma foto</h3>
+  <p>O ISNet recebe uma foto e devolve uma <b>máscara</b>: uma imagem em preto e branco que marca o que é o assunto principal (branco) e o que é fundo (preto). Usando essa máscara como transparência, sobra só o assunto, sem fundo. O arquivo tem ~170 MB (licença Apache 2.0). Como roda uma vez por foto e o resultado fica em cache, a CPU basta.</p>
+  <div class="clips h" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+    <figure style="--ar:auto"><img src="assets/isnet/foto.jpg" alt="Foto original da Kombi" style="display:block;width:100%"><figcaption><b>1 · Foto original</b>Entrada do modelo.</figcaption></figure>
+    <figure style="--ar:auto"><img src="assets/isnet/mascara.jpg" alt="Máscara em preto e branco" style="display:block;width:100%"><figcaption><b>2 · Máscara</b>Branco é o assunto; preto é o fundo.</figcaption></figure>
+    <figure style="--ar:auto"><img src="assets/isnet/recorte.jpg" alt="Kombi recortada sobre fundo escuro" style="display:block;width:100%"><figcaption><b>3 · Recorte</b>A máscara vira transparência. Agora o assunto pode ir para outro fundo.</figcaption></figure>
+  </div>
+  <p>No projeto, o recorte alimenta a <b>colagem editorial</b> (assunto em P&amp;B sobre fundo de estúdio) e serve para <b>limpar imagens de objetos gerados por IA</b> antes de animá-los na narração.</p>
+
+  <h3>Depth Anything V2 Small (ONNX, DirectML): estima a profundidade</h3>
+  <p>Este modelo olha para <b>uma única foto</b> e estima, para cada pixel, a distância até a câmera. A saída é uma imagem em tons de cinza: <b>quanto mais claro, mais perto</b>. Roda na GPU via DirectML. O arquivo tem ~100 MB e usa só a versão <i>Small</i>, porque as versões maiores têm licença não comercial.</p>
+
+  <h3>Exemplo: parallax 2.5D</h3>
+  <p>Parallax é o efeito de objetos próximos se moverem mais que os distantes quando a câmera se desloca. Com o mapa de profundidade, dá para simular isso numa foto parada: cada pixel é deslocado <b>proporcionalmente à sua profundidade</b>. Fica em "2.5D" porque a imagem continua plana, mas parece ter camadas.</p>
+  <div class="clips h" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+    <figure style="--ar:auto"><img src="assets/parallax/foto.jpg" alt="Foto da Kombi" style="display:block;width:100%"><figcaption><b>1 · Foto</b>Só uma imagem estática.</figcaption></figure>
+    <figure style="--ar:auto"><img src="assets/parallax/profundidade.jpg" alt="Mapa de profundidade" style="display:block;width:100%"><figcaption><b>2 · Mapa de profundidade</b>Gerado pelo modelo: claro é perto, escuro é longe.</figcaption></figure>
+    <figure style="--ar:16/9"><video muted loop playsinline preload="metadata" src="assets/parallax/parallax.mp4"></video><figcaption><b>3 · Resultado</b>A Kombi desliza de um jeito e as árvores ao fundo de outro, e a câmera se aproxima devagar.</figcaption></figure>
+  </div>
+  <ul class="t">
+    <li>O ponto de foco é o <b>assunto</b>: ele fica quase parado. O que está mais perto que ele se desloca para um lado, e o que está mais longe, para o outro.</li>
+    <li>O deslocamento é pequeno (uma fração da largura da imagem) e vem junto de uma aproximação lenta da câmera. Ângulo e sentido variam de cena para cena.</li>
+    <li>Só entra em fotos grandes e em cenas com pelo menos 3,5 s. No modo automático, cerca de 40% das fotos elegíveis, nunca duas seguidas.</li>
+  </ul>
+  <p class="muted" style="font-size:14px">Esse clipe foi gerado só para esta página, pelo mesmo caminho do pipeline, com uma foto do episódio de exemplo: o episódio em si não usa parallax.</p>
+
+  <h3>Lição</h3>
+  <p>Efeitos genéricos (anel, íris, zoom sem motivo) foram trocados por animação guiada pela história: o que aparece é o que a narração acabou de dizer.</p>
+</section>
+
+<!-- ============ 6 ============ -->
+<section id="ffmpeg">
+  <p class="eyebrow">06 · FFmpeg e áudio</p>
+  <h2>Montagem, mixagem e master</h2>
+
+  <p>Em vez de renderizar o vídeo inteiro de uma vez, o pipeline trabalha em pedaços e guarda cada pedaço em cache. Se você altera uma cena, só o pedaço dela é refeito. O áudio segue um caminho separado e é juntado no fim.</p>
+
+  <div class="flow" role="img" aria-label="Montagem">
+    <div class="node"><b>1 · Uma cena, um arquivo</b><span>"mezanino": vídeo intermediário de qualidade alta e rápido de gerar</span></div>
+    <div class="node"><b>2 · Cenas viram blocos</b><span>até 12 cenas por bloco, com transições e acabamento</span></div>
+    <div class="node"><b>3 · Blocos são colados</b><span><code class="i">-c copy</code>: emenda os arquivos sem comprimir de novo</span></div>
+    <div class="node"><b>4 · Áudio à parte</b><span>voz + música + efeitos, depois o master</span></div>
+  </div>
+
+  <h3>Como o vídeo é montado</h3>
+  <ul class="t">
+    <li><b>Por que blocos:</b> cada bloco de até 12 cenas (cortado só onde há corte seco) é codificado <b>em paralelo</b>, porque a maioria dos filtros do FFmpeg usa um único núcleo, e cada bloco tem o seu próprio cache por hash.</li>
+    <li><b>Emendar sem comprimir de novo:</b> cada bloco já está salvo de forma comprimida (H.264). Comprimir outra vez, mesmo sem mexer na imagem, descarta um pouco mais de informação a cada vez, como salvar um JPG várias vezes. Com <code class="i">-c copy</code>, o FFmpeg não descomprime nem comprime: só copia os dados já comprimidos e emenda os arquivos. É rápido (segundos) e <b>não perde qualidade</b>.</li>
+    <li><b>Encoder:</b> é o programa que comprime o vídeo. O pipeline <b>testa de verdade</b> cada opção codificando 1 quadro (listar o encoder no FFmpeg não garante que funciona) e escolhe entre NVENC (Nvidia), AMF (AMD) e QSV (Intel). Aqui: <code class="i">h264_amf</code>. Sem GPU, usa o <code class="i">libx264</code>, na CPU.</li>
+  </ul>
+
+  <h3>Como o acabamento é feito</h3>
+  <p>"Acabamento" é o conjunto de ajustes que faz fotos e clipes de fontes diferentes parecerem do mesmo filme. No FFmpeg, cada ajuste é um <b>filtro</b>; os filtros são encadeados (cada um recebe o vídeo, transforma e passa adiante) e rodam numa única passada. Há dois níveis:</p>
+  <ul class="t">
+    <li><b>Por cena: cor por "era".</b> Cada cena é classificada em <i>histórico</i> (arquivo e fotos antigas), <i>moderno</i>, <i>ia</i> (imagem gerada) ou <i>gráfico</i> (sem correção). Cada era tem uma receita de cor, guardada no arquivo de identidade visual do canal.</li>
+    <li><b>Por bloco: vinheta, grão e fades.</b> Depois de aplicar as transições entre as cenas do bloco, o bloco recebe a vinheta e, no render final, o grão. O primeiro bloco ganha um fade de entrada e o último, um de saída.</li>
+    <li><b>Por último: o que é desenhado por cima.</b> Rótulos, objetos animados e CTAs entram <i>depois</i> do acabamento, para ficarem nítidos e sem grão.</li>
+  </ul>
+  <div class="codewrap">
+    <header><span>as receitas, simplificadas (valores reais do canal)</span><span>tokens do canal + montar.py</span></header>
+<pre class="code" data-lang="py" data-src="s-acabamento"></pre>
+  </div>
+  <ul class="t">
+    <li><code class="i">hue=s=0</code> zera a saturação: a foto histórica vira preto e branco. <code class="i">eq</code> ajusta contraste e gama. <code class="i">colorbalance</code> empurra as sombras e as luzes para tons quentes ou frios.</li>
+    <li><code class="i">vignette</code> escurece as bordas, para o olho ir ao centro. O ângulo controla o tamanho da área clara: quanto menor, mais forte a vinheta.</li>
+    <li><code class="i">noise</code> espalha ruído fino. <code class="i">c0s=5</code> é a intensidade e <code class="i">c0</code> restringe o efeito ao canal de brilho (luma), então não aparecem pontos coloridos. <code class="i">t+u</code> faz o ruído mudar a cada quadro, como grão de filme. No rascunho o grão fica desligado, para renderizar mais rápido.</li>
+  </ul>
+
+  <h3>Transições e legendas</h3>
+  <ul class="t">
+    <li><b>Transições dinâmicas:</b> <i>whip</i> (giro rápido com borrão), <i>rack focus</i> (o foco passa de um plano para outro), <i>film burn</i> (clarão de filme queimado) e <i>zoom-through</i> (atravessar a imagem com zoom). São calculadas quadro a quadro com OpenCV, sem assets de terceiros.</li>
+    <li><b>Legenda (SRT):</b> a narração é dividida em linhas de até ~42 caracteres e ~3 s. Um algoritmo escolhe onde quebrar para <b>não terminar a linha numa palavra solta</b> (como "de", "que" ou "e") e para nunca atravessar o fim de uma frase.</li>
+  </ul>
+
+  <h3>Ducking pelo envelope de palavras</h3>
+  <p><i>Ducking</i> é baixar a música enquanto a voz fala. O jeito comum é um <i>sidechain</i>: a voz controla um compressor na música, que reage com um pequeno atraso e pode "bombear" (o volume sobe e desce de forma audível). Aqui o ganho é <b>desenhado de antemão</b>: como o alinhamento já sabe o segundo de cada palavra, a música desce um pouco antes da primeira palavra e sobe depois da última, com rampas suaves.</p>
+  <figure class="chart">
+    <svg viewBox="0 0 720 150" role="img" aria-label="Ilustração: voz e ganho da música">
+      <g stroke="#2a2f3b" stroke-width="1"><line x1="0" y1="55" x2="720" y2="55"/><line x1="0" y1="135" x2="720" y2="135"/></g>
+      <g fill="#e8b04a" opacity=".85">
+        <rect x="20" y="30" width="130" height="50" rx="4"/><rect x="170" y="30" width="95" height="50" rx="4"/>
+        <rect x="360" y="30" width="150" height="50" rx="4"/><rect x="560" y="30" width="110" height="50" rx="4"/>
+      </g>
+      <text x="22" y="22" fill="#9aa0ad" font-family="monospace" font-size="11">palavras (voz)</text>
+      <path d="M0 126 L20 126 C32 126 38 138 50 138 L150 138 C162 138 160 138 172 138 L265 138 C285 138 290 118 310 118 L350 118 C362 118 366 138 378 138 L510 138 C526 138 540 118 556 118 L560 118 C572 118 576 138 588 138 L670 138 C690 138 695 118 715 118 L720 118" fill="none" stroke="#62cfc7" stroke-width="2.5"/>
+      <text x="22" y="112" fill="#62cfc7" font-family="monospace" font-size="11">ganho da música</text>
+    </svg>
+    <figcaption>Ilustrativo. Voz: música a −16 dB. Pausas longas, cartelas e capítulos: −6 dB. Rampa de 300 ms.</figcaption>
+  </figure>
+
+  <h3>Master em duas passadas</h3>
+  <p>O <code class="i">loudnorm</code> com <code class="i">linear=true</code> cai sozinho no modo dinâmico quando o ganho faria o pico passar do teto. Para o nível final ser previsível, o pipeline <b>mede primeiro</b> e depois aplica um ganho linear com um limitador: alvo de −14 LUFS e true peak abaixo de −1,5 dBTP.</p>
+  <div class="codewrap">
+    <header><span>trecho</span><span>pipeline/montar.py</span></header>
+<pre class="code" data-lang="py" data-src="s-master"></pre>
+  </div>
+  <p class="muted">Saídas: MP4, SRT e descrição com capítulos e créditos (música e efeitos com licença CC BY entram sozinhos).</p>
+</section>
+
+<!-- ============ 7 ============ -->
+<section id="fim">
+  <p class="eyebrow">07 · Fechamento</p>
+  <h2>O que dá para reaproveitar</h2>
+  <div class="grid g3">
+    <div class="card"><span class="n">1</span><h4>Contrato antes do código</h4><p>Um schema que valida o que o pipeline precisa e que a IA consegue preencher.</p></div>
+    <div class="card"><span class="n">2</span><h4>Tudo é arquivo + hash</h4><p>Cache barato e a possibilidade de refazer só o que mudou, em qualquer etapa.</p></div>
+    <div class="card"><span class="n">3</span><h4>Portões explícitos</h4><p>Custo, direitos e qualidade viram etapas do fluxo: <code class="i">--confirmar</code>, licenças gravadas, taxa de casamento da voz, aprovação humana do roteiro.</p></div>
+  </div>
+
+  <h3>Stack</h3>
+  <div class="stack">
+    <div class="card"><h4>Voz e alinhamento</h4><ul><li>ElevenLabs v4 (OpenRouter)</li><li>Gemini 2.5 Flash TTS</li><li>Kokoro-82M · Chatterbox pt-BR</li><li>Scribe v2 · faster-whisper</li></ul></div>
+    <div class="card"><h4>Visão</h4><ul><li>ISNet (recorte)</li><li>Depth Anything V2 Small</li><li>YuNet (detecção de rosto)</li><li>OpenCV · onnxruntime-directml</li></ul></div>
+    <div class="card"><h4>IA generativa</h4><ul><li>Gemini (imagem e vídeo)</li><li>Flux 2 Klein 4B · Wan 2.2 TI2V 5B</li><li>fal.ai</li></ul></div>
+    <div class="card"><h4>Render</h4><ul><li>Remotion 4 · React 19</li><li>FFmpeg (AMF, loudnorm, xfade)</li><li>Python 3.12 · jsonschema · Pillow · numpy</li></ul></div>
+  </div>
+</section>
+
+<!-- ============ 8 ============ -->
+<section id="demo">
+  <p class="eyebrow">08 · Demonstração</p>
+  <h2>Ao vivo: do prompt ao vídeo</h2>
+  <p>A demonstração roda num <b>repositório enxuto, feito só para isso</b>, com o Claude Code no terminal. Você escreve um pedido em linguagem natural; o Claude gera o storyboard e o pipeline faz o resto, no que cabe num notebook sem placa de vídeo.</p>
+
+  <div class="flow" role="img" aria-label="Fluxo da demonstração">
+    <div class="node"><b>Prompt</b><span>linguagem natural</span></div>
+    <div class="node ai"><b>Storyboard</b><span>escrito pelo Claude Code</span></div>
+    <div class="node"><b>Validar</b><span>schema + regras</span></div>
+    <div class="node"><b>Narrar</b><span>Gemini TTS + whisper</span></div>
+    <div class="node"><b>Montar</b><span>Remotion + FFmpeg, só CPU</span></div>
+  </div>
+
+  <h3>O pedido</h3>
+<pre class="code" style="background:#11141a;border:1px solid var(--line);border-radius:12px" data-lang="txt" data-src="s-prompt"></pre>
+
+  <h3>O storyboard que serve de reserva</h3>
+  <p>Duas das 7 cenas do vídeo de reserva (<i>por que 0,1 + 0,2 não dá 0,3 no computador</i>). Note as âncoras em <code class="i">"ancora"</code>:</p>
+  <div class="codewrap">
+    <header><span>duas cenas do storyboard real</span><span>episodios/demo-reserva/storyboard.json</span></header>
+<pre class="code" data-lang="json" data-src="s-sb-demo"></pre>
+  </div>
+
+  <h3>Resultado real</h3>
+  <p>O rascunho que a própria pipeline gerou: 720p, 46 s, narração Gemini (voz Algenib), legendas em <code class="i">.srt</code> e descrição gerados juntos.</p>
+  <video class="demovideo" controls preload="metadata" poster="assets/demo/poster.jpg" src="assets/demo/demo-reserva.mp4"></video>
+  <p class="muted" style="font-size:14px">Cada cena é um componente React renderizado pelo Remotion. A folha de contato abaixo mostra as 12 amostras do vídeo.</p>
+  <img src="assets/demo/folha.jpg" alt="Folha de contato do vídeo de demonstração" style="display:block;width:100%;max-width:760px;border-radius:12px;border:1px solid var(--line)">
+
+  <h3>Quanto tempo leva</h3>
+  <table class="tbl">
+    <tr><th>Etapa</th><th>Tempo medido</th></tr>
+    <tr><td>Validar o storyboard</td><td class="t">0,4 s</td></tr>
+    <tr><td>Narrar 7 cenas (43 s de áudio), Gemini ao vivo</td><td class="t">~57 s</td></tr>
+    <tr><td>Montar o rascunho a frio (7 cenas)</td><td class="t">~130 s</td></tr>
+    <tr class="hi"><td><b>Rodar de novo sem mudar nada</b></td><td class="t">8 s</td></tr>
+    <tr class="hi"><td><b>Mudar um número numa cena: só ela é refeita</b></td><td class="t">36 s</td></tr>
+    <tr><td>Mudar a fala de uma cena (voz + montagem)</td><td class="t">13 s + 37 s</td></tr>
+  </table>
+  <p class="muted" style="font-size:14px">Medido num desktop de desenvolvimento (CPU de 6 núcleos), com o render só na CPU. Numa máquina sem placa de vídeo e mais fraca, esses tempos ficam maiores.</p>
+
+  <h3>A parte que mais explica a arquitetura: o cache</h3>
+  <p>Depois do primeiro vídeo, o roteiro da demo é simples: trocar o número de uma cena e montar de novo. O log mostra <code class="i">Remotion: 1 cena(s) para renderizar</code>: o hash das props da cena mudou, e só ela é refeita. As outras 6 vêm do cache. É o mesmo mecanismo que vale para voz, blocos de vídeo e objetos.</p>
+
+  <h3>Plano B</h3>
+  <ul class="t">
+    <li>Sem internet ou sem cota do TTS: o episódio de reserva tem a narração em cache e monta offline.</li>
+    <li>Claude Code lento: um storyboard salvo roda os mesmos passos à mão.</li>
+    <li>Tudo falhou: o vídeo de reserva já renderizado, acima.</li>
+  </ul>
+
+  <h3>O que já entrou depois da primeira versão</h3>
+  <div class="clips h" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+    <figure style="--ar:16/9"><video muted loop playsinline preload="metadata" src="assets/demo/cena3d.mp4" poster="assets/demo/cena3d.jpg"></video><figcaption><b>Cenas 3D</b>Um catálogo de 17 modelos procedurais (engrenagem, motor, mapa, globo, sol, cidade, termômetro…), com ações presas à palavra falada. Servem como cena inteira ou como objeto transparente sobre uma foto. Aqui, o sistema solar do formato "E se…".</figcaption></figure>
+    <figure style="--ar:auto"><img src="assets/demo/legenda_palavra.jpg" alt="Legenda palavra a palavra no vídeo longo" style="display:block;width:100%"><figcaption><b>Legenda palavra a palavra no longo</b>Opcional, desligada por padrão: a palavra falada ("em") sai em destaque, em até 2 linhas, no mesmo estilo dos Shorts. Faixa recortada de um quadro de teste.</figcaption></figure>
+  </div>
+  <ul class="t">
+    <li><b>Formato "E se…":</b> ficção explicativa (por exemplo, "e se o Sol parasse de brilhar por 24 horas?"), alternando com o documentário. Cada consequência vem classificada como documentada, modelada ou especulação.</li>
+    <li><b>Mídia brasileira:</b> uma lista verificada de acervos livres no Wikimedia Commons (Agência Brasil, Arquivo Nacional, Marc Ferrez, Augusto Malta…), com crédito e licença automáticos.</li>
+  </ul>
+</section>
+
+</main>
+</div>
+
+<!-- ======= trechos de código (texto cru) ======= -->
+<script type="text/plain" id="s-estrutura">{
+  "meta": {
+    "titulo": "…", "idioma": "pt-BR",
+    "musica": { … }, "cta": { … }, "thumbnail": { … }
+  },
+  "cenas": [
+    {
+      "id": "c11",
+      "narracao": "o texto exato que será falado",
+      "visual":   { "tipo": "stock_video | stock_imagem | arquivo_historico |
+                              ia_imagem | mapa | numero | comparacao | domino | icones | … " },
+      "sub":      [ { "ancora": "palavra", "visual": { … } } ],   // sub-cortes presos a uma palavra
+      "objetos":  [ { "objeto": "…", "em": "palavra" } ],        // coisas que aparecem na fala
+      "marca": { … }, "movimento": "…", "transicao": "…", "som": { … }
+    }
+  ],
+  "fontes": [ { "afirmacao": "…", "url": "…", "cenas": ["c09", "c11"] } ]
+}</script>
+
+<script type="text/plain" id="s-fontes">{
+  "afirmacao": "Uno Mille lançado em setembro de 1990 (motor de 1.049 para 994 cm³);
+                alíquota de IPI de 20% para carros até 1.000 cm³; Fiat era a única
+                com motor pronto; Mille produzido até o fim de 2013",
+  "url": "https://autoentusiastas.com.br/2025/09/uno-mille/",
+  "cenas": ["c09", "c11", "c12", "c16", "c38", "c40"]
+}</script>
+
+<script type="text/plain" id="s-creditos">{
+  "c09": {
+    "autor": "José Cruz",
+    "licenca": "CC BY 3.0 br",
+    "pagina": "https://commons.wikimedia.org/wiki/File:Fernando_Collor_e_Itamar_Franco.jpg",
+    "requer_atribuicao": true,
+    "verificar": false,
+    "fonte": "wikimedia",
+    "arquivo": "midia/c09.jpg",
+    "opcao": 1
+  }
+}</script>
+
+<script type="text/plain" id="s-validar">    # ---- variedade dentro do episódio
+    tipos = Counter(c["visual"]["tipo"] for c in cenas)
+    n = len(cenas)
+    for t, q in tipos.items():
+        if n >= 6 and q / n > lim["max_percentual_mesmo_tipo"]:
+            avisos.append(f"variedade: '{t}' ocupa {q / n:.0%} das cenas (limite {lim['max_percentual_mesmo_tipo']:.0%})")
+    if tipos.get("ia_video", 0) > lim["max_ia_video"]:
+        erros.append(f"custo: {tipos['ia_video']} cenas ia_video (máximo {lim['max_ia_video']})")
+    if v2 and n >= 12 and len(tipos) < lim.get("min_tipos_distintos", 4):
+        avisos.append(f"variedade: só {len(tipos)} tipos de visual em {n} cenas (mínimo {lim.get('min_tipos_distintos', 4)})")
+
+    seguidos = 1
+    for a, b in zip(cenas, cenas[1:]):
+        mesma = assinatura(a) == assinatura(b)
+        seguidos = seguidos + 1 if mesma else 1
+        if seguidos > lim["max_iguais_seguidos"]:
+            avisos.append(f"variedade: {seguidos} cenas seguidas iguais até {b['id']} ({assinatura(b)[0]})")</script>
+
+<script type="text/plain" id="s-minimo">import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion';
+
+export const Titulo: React.FC<{ texto: string }> = ({ texto }) => {
+  const frame = useCurrentFrame();   // 0, 1, 2, ... (a 30 fps, 30 quadros = 1 segundo)
+
+  // do quadro 0 ao 30, a opacidade sobe de 0 a 1
+  const opacidade = interpolate(frame, [0, 30], [0, 1]);
+
+  return (
+    <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <h1 style={{ opacity: opacidade }}>{texto}</h1>
+    </AbsoluteFill>
+  );
+};</script>
+
+<script type="text/plain" id="s-cena">const CENAS: Record<string, React.FC<{ p: PropsCena }>> = {
+  numero: Numero,
+  capitulo: Capitulo,
+  citacao: Citacao,
+  mapa: Mapa,
+  documento: Documento,
+  linha_do_tempo: LinhaDoTempo,
+  parallax: Parallax,
+  comparacao: Comparacao,
+  domino: Domino,
+  colagem: Colagem,
+  icones: Icones,
+};
+
+export const Cena: React.FC<PropsCena> = (p) => {
+  aplicarCanal(p.tokens, p.idioma);
+  const C = CENAS[p.tipo];
+  return (
+    <AbsoluteFill style={{ background: cor.tinta }}>
+      <Fontes />
+      {C ? <C p={p} /> : <div>tipo desconhecido: {p.tipo}</div>}
+    </AbsoluteFill>
+  );
+};</script>
+
+<script type="text/plain" id="s-numero">export const Numero: React.FC<{ p: PropsCena }> = ({ p }) => {
+  const f = useCurrentFrame();           // o quadro atual é a única fonte de tempo
+  const d = p.dados;                     // props vindas do Python
+  // a cifra entra quando o valor é DITO: o tempo vem da palavra-âncora
+  const t0 = quadro(p, tempoDaAncora(p.palavras, d.ancora, 0.2));
+  // sobe até ~96%, pausa (antecipação do clímax) e só então trava no valor exato
+  const kConta = interpolate(f, [t0, t0 + durConta], [0, QUASE], { ...clamp, easing: ease.padrao });
+  // …</script>
+
+<script type="text/plain" id="s-remotion">    for c in cenas:
+        fundo, imagens = vizinha_fn(c)
+        props = montar_props(c, w, h, fps, fundo, imagens)
+        c.hash = hashlib.sha1(json.dumps([VERSAO, props, rascunho, _versao_codigo()], sort_keys=True).encode()).hexdigest()
+        c.arquivo = pasta / f"{c.id}.mp4"
+        marca = pasta / f"{c.id}.hash"
+        if c.arquivo.exists() and marca.exists() and marca.read_text() == c.hash:
+            continue                      # nada mudou: reaproveita o mp4
+        pendentes.append((c, {"props": props, "saida": str(c.arquivo)}))
+    rodar_fila([t for _, t in pendentes])  # um único processo do Node renderiza todas as pendentes</script>
+
+<script type="text/plain" id="s-acabamento"># por cena: receita de cor da era "histórico" (preto e branco, contraste e um tom quente)
+hue=s=0, eq=contrast=1.06:gamma=0.98, colorbalance=rs=0.025:bs=-0.03 …
+
+# por cena: era "moderno" (cor levemente dessaturada, sombras frias e luzes quentes)
+eq=saturation=0.86:contrast=1.04, colorbalance=rs=-0.03:bs=0.035:rh=0.03 …
+
+# por bloco: vinheta e, no render final, grão só no brilho
+vignette=angle=PI/5.5
+noise=c0s=5:c0f=t+u
+
+# no primeiro e no último bloco
+fade=t=in:st=0:d=0.8        fade=t=out:d=1.2</script>
+
+<script type="text/plain" id="s-prompt">Faça um vídeo de 40 segundos sobre por que 0,1 + 0,2 não dá 0,3 no computador.
+Valide, narre e monte o rascunho.</script>
+
+<script type="text/plain" id="s-sb-demo">{
+  "id": "c01",
+  "bloco": "gancho",
+  "narracao": "Some zero vírgula um com zero vírgula dois no computador. Não dá zero vírgula três.",
+  "visual": { "tipo": "citacao", "citacao": {
+      "texto": "0.1 + 0.2 = **0.30000000000000004**",
+      "autor": "Python, JavaScript e outras linguagens",
+      "contexto": "resultado real no console" } }
+},
+{
+  "id": "c03",
+  "bloco": "contexto",
+  "narracao": "Sessenta e quatro bits: é o que o formato mais comum usa para cada número.",
+  "visual": { "tipo": "numero", "numero": {
+      "valor": 64,
+      "unidade": "bits por número (double)",
+      "ancora": "sessenta" } }
+}</script>
+
+<script type="text/plain" id="s-master">    # master em 2 passadas: mede (loudnorm, json) e aplica ganho LINEAR + limitador de pico.
+    med = _loudnorm_medir(entradas, filtro, total)
+    ganho = -14.0 - float(med["input_i"])
+    teto = 10 ** (-2.0 / 20)  # pico (4× sobreamostrado) -2 dBFS → true peak abaixo de -1,5 dBTP
+    master = f"volume={ganho:.2f}dB,aresample=192000,alimiter=limit={teto:.4f}:attack=2:release=80:level=0,aresample=48000"
+    cmd = ["ffmpeg", "-y", "-v", "error", *entradas, "-filter_complex",
+           f"{filtro_saida};[pre]{master}[a]", "-map", "[a]",
+           "-t", f"{total:.3f}", "-ar", "48000", "-ac", "2", str(saida_audio)]
+    rodar(cmd)</script>
+
+<script>
+/* ---------- realce de sintaxe mínimo (sem libs externas) ---------- */
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const RULES = {
+  json: [[/\b(true|false|null)\b/g,'<span class="tk-k">$1</span>'],[/\b(-?\d+(?:\.\d+)?)\b/g,'<span class="tk-n">$1</span>']],
+  py: [[/\b(def|if|elif|else|for|in|return|continue|import|from|not|and|or|None|True|False)\b/g,'<span class="tk-k">$1</span>'],[/\b(\d+(?:\.\d+)?)\b/g,'<span class="tk-n">$1</span>']],
+  ts: [[/\b(const|export|return|import|from|type|if|else)\b/g,'<span class="tk-k">$1</span>'],[/\b(\d+(?:\.\d+)?)\b/g,'<span class="tk-n">$1</span>']]
+};
+function hl(code, lang){
+  // 1) strings e comentários viram placeholders: nada é colorido dentro deles (ex.: "//" em URLs)
+  const bag=[]; let t=esc(code);
+  const put=h=>{bag.push(h);return '\u0000'+(bag.length-1)+'\u0000';};
+  // uma só passada: vale o que começar primeiro (string ou comentário), então aspas dentro de comentário não viram string
+  const com = lang==='py' ? '#[^\\n]*' : '\\/\\/[^\\n]*';
+  const re = new RegExp('(f?"(?:\\\\.|[^"\\\\\\n])*"|f?\'(?:\\\\.|[^\'\\\\\\n])*\')(\\s*:)?|(' + com + ')','g');
+  t=t.replace(re,(m,s,colon,c)=> c ? put('<span class="tk-c">'+c+'</span>')
+      : put('<span class="'+(lang==='json'&&colon?'tk-key':'tk-s')+'">'+s+'</span>')+(colon||''));
+  // 2) números e palavras-chave só no texto que sobrou
+  t=t.split(/(\u0000\d+\u0000)/).map(p=>p.charCodeAt(0)===0?p:(RULES[lang]||[]).reduce((a,[re,rep])=>a.replace(re,rep),p)).join('');
+  return t.replace(/\u0000(\d+)\u0000/g,(_,i)=>bag[+i]);
+}
+document.querySelectorAll('pre[data-src]').forEach(pre=>{
+  const src=document.getElementById(pre.dataset.src);
+  pre.innerHTML = hl(src.textContent, pre.dataset.lang);
+});
+
+/* ---------- visualizador de cenas ---------- */
+const SCENES = [
+ { id:'c11', clip:'assets/clips/objetos_motor.mp4', cap:'objeto ancorado em "motor"', anchor:'motor', json:{
+   id:'c11', bloco:'contexto',
+   narracao:'Menos imposto, carro mais barato. Mas só uma fábrica tinha pronto um motor quase desse tamanho: a Fiat.',
+   visual:{ tipo:'ia_imagem', fonte:'local', prompt:'Inside a 1990s Brazilian car factory: a row of small car engines on an assembly line, … no brand logos' },
+   objetos:[{ objeto:'small four-cylinder car engine block, plain grey', em:'motor', posicao:'dir', entrada:'desliza' }] }},
+ { id:'c12', clip:'assets/clips/comparacao.mp4', cap:'barras que crescem nas palavras "quarenta" e "noventa"', anchor:'quarenta', json:{
+   id:'c12', bloco:'contexto',
+   narracao:'Em Betim, os engenheiros encurtaram o curso dos pistões do motor do Uno, que tinha mil e quarenta e nove cilindradas. Ficou com novecentos e noventa e quatro: um sopro abaixo da linha do imposto.',
+   visual:{ tipo:'comparacao', comparacao:{ modo:'numeros',
+     a:{ rotulo:'Motor do Uno', valor:1049, unidade:'cilindradas', ancora:'quarenta' },
+     b:{ rotulo:'Motor do Mille', valor:994, unidade:'cilindradas', ancora:'noventa' } } } }},
+ { id:'c33', clip:'assets/clips/objetos_chave.mp4', cap:'ícone da biblioteca, entra em "porta"', anchor:'porta', json:{
+   id:'c33', bloco:'desenvolvimento',
+   narracao:'Quem não tinha um motor de mil cilindradas teve que correr para adaptar os compactos. O 1.0 virou a porta de entrada do mercado.',
+   visual:{ tipo:'stock_video', fonte:'pexels', busca:'car dealership showroom cars' },
+   objetos:[{ icone:'chave', em:'porta', posicao:'dir_cima', entrada:'gira' }] }},
+ { id:'c34', clip:'assets/clips/domino_numero.mp4', cap:'a peça cai na palavra "cai"', anchor:'cai', json:{
+   id:'c34', bloco:'desenvolvimento',
+   narracao:'Peça cinco. O carro que todo mundo tem. E a última peça cai.',
+   visual:{ tipo:'domino', domino:{ numero:5, data:'2001', titulo:'O auge', pecas:[], ancora:'cai' } } }},
+ { id:'c09', clip:'assets/clips/colagem_moldura.mp4', cap:'arquivo histórico + ficha "20%" em "vinte"', anchor:'vinte', json:{
+   id:'c09', bloco:'contexto',
+   narracao:'O governo de Fernando Collor criou então uma alíquota nova de IPI, o imposto sobre produtos industrializados: vinte por cento para carros de até mil cilindradas.',
+   visual:{ tipo:'arquivo_historico', fonte:'wikimedia', busca:'File:Fernando Collor e Itamar Franco.jpg' },
+   sub:[{ ancora:'vinte', visual:{ tipo:'icones', icones:{ modo:'fichas', titulo:'IPI para carros até 1.000 cc',
+     fichas:[{ texto:'20%', legenda:'alíquota nova', em:'vinte' }] } } }] }}
+];
+const tabs=document.querySelector('#viewer .tabs'), vJson=document.getElementById('v-json'),
+      vNarr=document.getElementById('v-narr'), vVid=document.getElementById('v-video'), vCap=document.getElementById('v-cap');
+function show(i){
+  const s=SCENES[i];
+  tabs.querySelectorAll('.tab').forEach((b,j)=>b.setAttribute('aria-selected',j===i));
+  const txt=esc(s.json.narracao), re=new RegExp('(\\b'+s.anchor+'\\b)','i');
+  vNarr.innerHTML=txt.replace(re,'<mark>$1</mark>');
+  vJson.innerHTML=hl(JSON.stringify(s.json,null,2),'json');
+  vVid.poster=s.clip.replace('/clips/','/posters/').replace('.mp4','.jpg'); vVid.src=s.clip; vVid.play().catch(()=>{vVid.controls=true});
+  vCap.textContent=s.id+' · '+s.cap;
+}
+SCENES.forEach((s,i)=>{
+  const b=document.createElement('button'); b.className='tab'; b.type='button'; b.role='tab'; b.textContent=s.id+' · '+s.json.visual.tipo;
+  b.addEventListener('click',()=>show(i)); tabs.appendChild(b);
+});
+show(0);
+
+/* ---------- vídeos: toca ao entrar na tela, pausa ao sair ---------- */
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  const v=e.target; if(e.isIntersecting){ if(reduce){v.controls=true}else v.play().catch(()=>{v.controls=true}); } else v.pause();
+}),{threshold:.35});
+const posterDe=src=>src.replace('/clips/','/posters/').replace('.mp4','.jpg');
+document.querySelectorAll('figure video').forEach(v=>{ const s=v.getAttribute('src'); if(s.includes('/clips/')) v.poster=posterDe(s); io.observe(v); });
+io.observe(vVid);
+
+/* ---------- índice lateral: seção atual ---------- */
+const links=[...document.querySelectorAll('#toc a')];
+const so=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){ links.forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id)); }
+}),{rootMargin:'-30% 0px -60% 0px'});
+document.querySelectorAll('main section').forEach(s=>so.observe(s));
+</script>
+</body>
+</html>
