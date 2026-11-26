@@ -229,22 +229,7 @@ figcaption code{font-size:12px;color:var(--cyan)}
 <pre class="code" data-lang="json" data-src="s-estrutura"></pre>
   </div>
 
-  <h3>Âncoras: preso à palavra, não ao tempo</h3>
-  <p>Sub-cortes, objetos e marcas apontam para uma <b>palavra da narração</b>. O tempo real só existe depois que a voz é alinhada. Clique numa cena real e veja o JSON, a palavra-âncora e o resultado:</p>
-
-  <div class="viewer" id="viewer">
-    <div class="tabs" role="tablist" aria-label="Cenas de exemplo"></div>
-    <div class="vtext">
-      <div class="lab">narração</div>
-      <p class="narr" id="v-narr"></p>
-      <div class="lab">json da cena</div>
-      <pre class="code" id="v-json" data-lang="json"></pre>
-    </div>
-    <div class="vclip">
-      <video id="v-video" muted loop playsinline preload="metadata"></video>
-      <div class="cap" id="v-cap"></div>
-    </div>
-  </div>
+  <p>Sub-cortes, objetos e marcas apontam para uma <b>palavra da narração</b> (a âncora), não para um tempo. O tempo real só existe depois que a voz é alinhada.</p>
 
   <h3>Validação em duas camadas</h3>
   <ul class="t">
@@ -747,52 +732,6 @@ document.querySelectorAll('pre[data-src]').forEach(pre=>{
   pre.innerHTML = hl(src.textContent, pre.dataset.lang);
 });
 
-/* ---------- visualizador de cenas ---------- */
-const SCENES = [
- { id:'c11', clip:'assets/clips/objetos_motor.mp4', cap:'objeto ancorado em "motor"', anchor:'motor', json:{
-   id:'c11', bloco:'contexto',
-   narracao:'Menos imposto, carro mais barato. Mas só uma fábrica tinha pronto um motor quase desse tamanho: a Fiat.',
-   visual:{ tipo:'ia_imagem', fonte:'local', prompt:'Inside a 1990s Brazilian car factory: a row of small car engines on an assembly line, … no brand logos' },
-   objetos:[{ objeto:'small four-cylinder car engine block, plain grey', em:'motor', posicao:'dir', entrada:'desliza' }] }},
- { id:'c12', clip:'assets/clips/comparacao.mp4', cap:'barras que crescem nas palavras "quarenta" e "noventa"', anchor:'quarenta', json:{
-   id:'c12', bloco:'contexto',
-   narracao:'Em Betim, os engenheiros encurtaram o curso dos pistões do motor do Uno, que tinha mil e quarenta e nove cilindradas. Ficou com novecentos e noventa e quatro: um sopro abaixo da linha do imposto.',
-   visual:{ tipo:'comparacao', comparacao:{ modo:'numeros',
-     a:{ rotulo:'Motor do Uno', valor:1049, unidade:'cilindradas', ancora:'quarenta' },
-     b:{ rotulo:'Motor do Mille', valor:994, unidade:'cilindradas', ancora:'noventa' } } } }},
- { id:'c33', clip:'assets/clips/objetos_chave.mp4', cap:'ícone da biblioteca, entra em "porta"', anchor:'porta', json:{
-   id:'c33', bloco:'desenvolvimento',
-   narracao:'Quem não tinha um motor de mil cilindradas teve que correr para adaptar os compactos. O 1.0 virou a porta de entrada do mercado.',
-   visual:{ tipo:'stock_video', fonte:'pexels', busca:'car dealership showroom cars' },
-   objetos:[{ icone:'chave', em:'porta', posicao:'dir_cima', entrada:'gira' }] }},
- { id:'c34', clip:'assets/clips/domino_numero.mp4', cap:'a peça cai na palavra "cai"', anchor:'cai', json:{
-   id:'c34', bloco:'desenvolvimento',
-   narracao:'Peça cinco. O carro que todo mundo tem. E a última peça cai.',
-   visual:{ tipo:'domino', domino:{ numero:5, data:'2001', titulo:'O auge', pecas:[], ancora:'cai' } } }},
- { id:'c09', clip:'assets/clips/colagem_moldura.mp4', cap:'arquivo histórico + ficha "20%" em "vinte"', anchor:'vinte', json:{
-   id:'c09', bloco:'contexto',
-   narracao:'O governo de Fernando Collor criou então uma alíquota nova de IPI, o imposto sobre produtos industrializados: vinte por cento para carros de até mil cilindradas.',
-   visual:{ tipo:'arquivo_historico', fonte:'wikimedia', busca:'File:Fernando Collor e Itamar Franco.jpg' },
-   sub:[{ ancora:'vinte', visual:{ tipo:'icones', icones:{ modo:'fichas', titulo:'IPI para carros até 1.000 cc',
-     fichas:[{ texto:'20%', legenda:'alíquota nova', em:'vinte' }] } } }] }}
-];
-const tabs=document.querySelector('#viewer .tabs'), vJson=document.getElementById('v-json'),
-      vNarr=document.getElementById('v-narr'), vVid=document.getElementById('v-video'), vCap=document.getElementById('v-cap');
-function show(i){
-  const s=SCENES[i];
-  tabs.querySelectorAll('.tab').forEach((b,j)=>b.setAttribute('aria-selected',j===i));
-  const txt=esc(s.json.narracao), re=new RegExp('(\\b'+s.anchor+'\\b)','i');
-  vNarr.innerHTML=txt.replace(re,'<mark>$1</mark>');
-  vJson.innerHTML=hl(JSON.stringify(s.json,null,2),'json');
-  vVid.poster=s.clip.replace('/clips/','/posters/').replace('.mp4','.jpg'); vVid.src=s.clip; vVid.play().catch(()=>{vVid.controls=true});
-  vCap.textContent=s.id+' · '+s.cap;
-}
-SCENES.forEach((s,i)=>{
-  const b=document.createElement('button'); b.className='tab'; b.type='button'; b.role='tab'; b.textContent=s.id+' · '+s.json.visual.tipo;
-  b.addEventListener('click',()=>show(i)); tabs.appendChild(b);
-});
-show(0);
-
 /* ---------- vídeos: toca ao entrar na tela, pausa ao sair ---------- */
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const io=new IntersectionObserver(es=>es.forEach(e=>{
@@ -800,7 +739,6 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{
 }),{threshold:.35});
 const posterDe=src=>src.replace('/clips/','/posters/').replace('.mp4','.jpg');
 document.querySelectorAll('figure video').forEach(v=>{ const s=v.getAttribute('src'); if(s.includes('/clips/')) v.poster=posterDe(s); io.observe(v); });
-io.observe(vVid);
 
 /* ---------- índice lateral: seção atual ---------- */
 const links=[...document.querySelectorAll('#toc a')];
